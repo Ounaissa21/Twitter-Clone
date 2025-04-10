@@ -48,7 +48,8 @@ class TweetCard extends ConsumerWidget {
                             margin: const EdgeInsets.all(10),
                             child: GestureDetector(
                               onTap: () {
-                                Navigator.push(context, UserProfileView.route(user));
+                                Navigator.push(
+                                    context, UserProfileView.route(user));
                               },
                               child: CircleAvatar(
                                 radius: 30,
@@ -95,18 +96,25 @@ class TweetCard extends ConsumerWidget {
                                         ),
                                       ),
                                     ),
-                                    if(user.isTwitterBlue)
+                                    if (user.isTwitterBlue)
                                       Padding(
-                                        padding: const EdgeInsets.only(right: 5,),
-                                        child: SvgPicture.asset(AssetsConstants.verifiedIcon),
+                                        padding: const EdgeInsets.only(
+                                          right: 5,
+                                        ),
+                                        child: SvgPicture.asset(
+                                            AssetsConstants.verifiedIcon),
                                       ),
 
-                                      //health icon place
-                                    const Padding(
-                                      padding: EdgeInsets.only(right: 5),
-                                     //child:
+                                    //health icon place
+                                    Padding(
+                                      padding: const EdgeInsets.only(right: 5),
+                                      child: SvgPicture.asset(
+                                        AssetsConstants.Gold,
+                                        height: 25,
+                                        width: 25,
                                       ),
-                                    
+                                    ),
+
                                     //const SizedBox(width: 5),
                                     Text(
                                       '@${user.name} · ${timeago.format(tweet.tweetedAt, locale: 'en_short')}',
@@ -117,44 +125,45 @@ class TweetCard extends ConsumerWidget {
                                     ),
                                   ],
                                 ),
-                               // const SizedBox(height: 5),
+                                // const SizedBox(height: 5),
 
-                                if(tweet.repliedTo.isNotEmpty) 
-                                ref.watch(getTweetByIdProvider(tweet.repliedTo)).when(
-                                  data: (repliedToTweet) {
-                                    final replyingToUser = ref.watch(
-                                      userDetailsProvider(
-                                        repliedToTweet.uid,
+                                if (tweet.repliedTo.isNotEmpty)
+                                  ref
+                                      .watch(
+                                          getTweetByIdProvider(tweet.repliedTo))
+                                      .when(
+                                        data: (repliedToTweet) {
+                                          final replyingToUser = ref
+                                              .watch(
+                                                userDetailsProvider(
+                                                  repliedToTweet.uid,
+                                                ),
+                                              )
+                                              .value;
+                                          return RichText(
+                                            text: TextSpan(
+                                              text: 'Replying to',
+                                              style: const TextStyle(
+                                                color: Pallete.greyColor,
+                                                fontSize: 16,
+                                              ),
+                                              children: [
+                                                TextSpan(
+                                                    text:
+                                                        ' @${replyingToUser?.name}',
+                                                    style: const TextStyle(
+                                                      color: Pallete.blueColor,
+                                                      fontSize: 16,
+                                                    )),
+                                              ],
+                                            ),
+                                          );
+                                        },
+                                        error: (error, st) => ErrorText(
+                                          error: error.toString(),
                                         ),
-                                    ).value;
-                                    return RichText(
-                                        text:  TextSpan(
-                                        text: 'Replying to', 
-                                        style: const TextStyle(
-                                         color: Pallete.greyColor,
-                                         fontSize: 16,
-                                         ),
-                                         children: [
-                                    TextSpan(
-                                      text: ' @${replyingToUser?.name}',
-                                      style: const TextStyle(
-                                      color: Pallete.blueColor,
-                                      fontSize: 16,
-                                      )
-                                    ),
-                                  ],
-                                  ), 
-                                  );
-                                  }, 
-                                  error: (error , st) => ErrorText(
-                                    error: error.toString(),
-                                  ),
-                                  loading: () =>const SizedBox() ,
-                                
-                                  ),
-                                
-                                  
-
+                                        loading: () => const SizedBox(),
+                                      ),
 
                                 HashtagText(text: tweet.text),
                                 if (tweet.tweetType == TweetType.image)
