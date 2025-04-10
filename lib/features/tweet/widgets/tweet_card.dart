@@ -84,8 +84,8 @@ class TweetCard extends ConsumerWidget {
                                 Row(
                                   children: [
                                     Container(
-                                      margin: EdgeInsets.only(
-                                        right: user.isTwitterBlue ? 1 : 5,
+                                      margin: const EdgeInsets.only(
+                                        right: 5,
                                       ),
                                       child: Text(
                                         user.name,
@@ -99,6 +99,12 @@ class TweetCard extends ConsumerWidget {
                                       Padding(
                                         padding: const EdgeInsets.only(right: 5,),
                                         child: SvgPicture.asset(AssetsConstants.verifiedIcon),
+                                      ),
+
+                                      //health icon place
+                                    const Padding(
+                                      padding: EdgeInsets.only(right: 5),
+                                     //child:
                                       ),
                                     
                                     //const SizedBox(width: 5),
