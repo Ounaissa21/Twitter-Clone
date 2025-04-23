@@ -1,3 +1,4 @@
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:twitter_clone/common/common.dart';
@@ -5,9 +6,17 @@ import 'package:twitter_clone/features/auth/controller/auth_controller.dart';
 //import 'package:twitter_clone/features/auth/view/login_view.dart';
 import 'package:twitter_clone/features/auth/view/signup_view.dart';
 import 'package:twitter_clone/features/home/view/home_view.dart';
+import 'package:twitter_clone/firebase_options.dart';
 import 'package:twitter_clone/theme/theme.dart';
 
-void main() {
+
+Future<void> main() async{
+  
+   // Initialize Firebase
+  await Firebase.initializeApp(
+    options: DefaultFirebaseOptions.currentPlatform,
+  );
+
   runApp(
     const ProviderScope(
       child: MyApp(),

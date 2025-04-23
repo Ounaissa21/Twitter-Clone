@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "937628544979",
+    "project_id": "healthadvisorapp-da610",
+    "storage_bucket": "healthadvisorapp-da610.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:937628544979:android:e79f5530f67e86d41b0926",
+        "android_client_info": {
+          "package_name": "com.example.twitter_clone"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBJXqcLK2NgbxHOkNMNMnlKulDNl24WLOs"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
