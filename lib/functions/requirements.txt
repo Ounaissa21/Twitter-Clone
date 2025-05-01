@@ -1,6 +1,0 @@
-functions-framework
-tensorflow
-numpy
-nltk
-textblob
-requests
