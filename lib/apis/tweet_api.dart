@@ -23,6 +23,7 @@ abstract class ITweetApi {
   Future<Document> getTweetById(String id);
   Future<List<Document>> getUserTweets(String uid);
   Future<List<Document>> getTweetsByHashtag(String hashtag);
+  //FutureEither<Document> updateTweetFields(String tweetId, Map<String, dynamic> fields);
 }
 
 class TweetAPI implements ITweetApi {
@@ -184,4 +185,5 @@ class TweetAPI implements ITweetApi {
     );
     return documents.documents;
   }
+
 }

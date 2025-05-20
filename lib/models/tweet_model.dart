@@ -16,6 +16,9 @@ class Tweet {
   final int reshareCount;
   final String retweetedBy;
   final String repliedTo;
+  final String category;
+  final String persuasiveMessage;
+
   const Tweet({
     required this.text,
     required this.hashtags,
@@ -30,6 +33,8 @@ class Tweet {
     required this.reshareCount,
     required this.retweetedBy,
     required this.repliedTo,
+    required this.category,
+    required this.persuasiveMessage,
   });
 
   Tweet copyWith({
@@ -46,6 +51,8 @@ class Tweet {
     int? reshareCount,
     String? retweetedBy,
     String? repliedTo,
+    String? category,
+    String? persuassiveMessage,
   }) {
     return Tweet(
       text: text ?? this.text,
@@ -61,6 +68,8 @@ class Tweet {
       reshareCount: reshareCount ?? this.reshareCount,
       retweetedBy: retweetedBy ?? this.retweetedBy,
       repliedTo: repliedTo ?? this.repliedTo,
+      category: category ?? this.category,
+      persuasiveMessage: persuassiveMessage ?? this.persuasiveMessage,
     );
   }
 
@@ -79,6 +88,8 @@ class Tweet {
     result.addAll({'reshareCount': reshareCount});
     result.addAll({'retweetedBy': retweetedBy});
     result.addAll({'repliedTo': repliedTo});
+    result.addAll({'category': category});
+    result.addAll({'persuasiveMessage': persuasiveMessage});
 
     return result;
   }
@@ -98,12 +109,14 @@ class Tweet {
       reshareCount: map['reshareCount']?.toInt() ?? 0,
       retweetedBy: map['retweetedBy'] ?? '',
       repliedTo: map['repliedTo'] ?? '',
+      category: map['category'] ?? '',
+      persuasiveMessage: map['persuasiveMessage'] ?? '',
     );
   }
 
   @override
   String toString() {
-    return 'Tweet(text: $text, hashtags: $hashtags, link: $link, imageLinks: $imageLinks, uid: $uid, tweetType: $tweetType, tweetedAt: $tweetedAt, likes: $likes, commentIds: $commentIds, id: $id, reshareCount: $reshareCount, retweetedBy: $retweetedBy, repliedTo: $repliedTo)';
+    return 'Tweet(text: $text, hashtags: $hashtags, link: $link, imageLinks: $imageLinks, uid: $uid, tweetType: $tweetType, tweetedAt: $tweetedAt, likes: $likes, commentIds: $commentIds, id: $id, reshareCount: $reshareCount, retweetedBy: $retweetedBy, repliedTo: $repliedTo, category: $category, persuasiveMessage: $persuasiveMessage)';
   }
 
   @override
@@ -123,7 +136,9 @@ class Tweet {
         other.id == id &&
         other.reshareCount == reshareCount &&
         other.retweetedBy == retweetedBy &&
-        other.repliedTo == repliedTo;
+        other.repliedTo == repliedTo &&
+        other.category == category && 
+        other.persuasiveMessage == persuasiveMessage;
   }
 
   @override
@@ -140,6 +155,8 @@ class Tweet {
         id.hashCode ^
         reshareCount.hashCode ^
         retweetedBy.hashCode ^
-        repliedTo.hashCode;
+        repliedTo.hashCode ^
+        category.hashCode ^
+        persuasiveMessage.hashCode;
   }
 }

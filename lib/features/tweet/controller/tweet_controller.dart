@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:io';
 import 'package:appwrite/appwrite.dart';
 import 'package:flutter/cupertino.dart';
@@ -11,6 +12,7 @@ import 'package:twitter_clone/features/auth/controller/auth_controller.dart';
 import 'package:twitter_clone/features/notification/controller/notification_controller.dart';
 import 'package:twitter_clone/models/tweet_model.dart';
 import 'package:twitter_clone/models/user_model.dart';
+import 'package:http/http.dart' as http;
 //import 'package:twitter_clone/apis/tweet_api.dart';
 
 final tweetControllerProvider = StateNotifierProvider<TweetController, bool>(
@@ -149,20 +151,44 @@ class TweetController extends StateNotifier<bool> {
     return document.map((tweet) => Tweet.fromMap(tweet.data)).toList();
   }
 
-  void shareTweet({
+
+
+  Future<Map<String, dynamic>> _classifyTweet(String text) async {
+  try {
+    final url = Uri.parse('http://192.168.137.1:8000/classify_post');
+    final headers = {'Content-Type': 'application/json'};
+    final body = jsonEncode({'text': text});
+
+    final response = await http.post(url, headers: headers, body: body);
+
+    if (response.statusCode == 200) {
+      return jsonDecode(response.body);
+    } else {
+      throw Exception('Failed to classify tweet: ${response.statusCode}');
+    }
+  } catch (e) {
+    debugPrint('Classification error: $e');
+    return {
+      'classification': '',
+      'persuasiveMessage': ''
+    };
+  }
+}
+
+  Future<void> shareTweet({
     required List<File> images,
     required String text,
     required BuildContext context,
     required String repliedTo,
     required String repliedToUserId,
-  }) {
+  }) async {
     if (text.isEmpty) {
       showSnackBar(context, 'Please enter text');
       return;
     }
 
     if (images.isNotEmpty) {
-      _shareImageTweet(
+       _shareImageTweet(
         context: context,
         images: images,
         text: text,
@@ -170,7 +196,7 @@ class TweetController extends StateNotifier<bool> {
         repliedToUserId: repliedToUserId,
       );
     } else {
-      _shareTextTweet(
+      await _shareTextTweet(
         context: context,
         text: text,
         repliedTo: repliedTo,
@@ -180,91 +206,99 @@ class TweetController extends StateNotifier<bool> {
   }
 
   void _shareImageTweet({
-    required List<File> images,
-    required String text,
-    required BuildContext context,
-    required String
-        repliedTo, // Update the state to indicate the tweet has been shared
-    required String repliedToUserId,
-  }) async {
-    state = true;
-    final hashtags = _getHashtagsFromText(text);
-    String link = _getLinkFromText(text);
-    final user = _ref.read(currentUserDetailsProvider).value!;
-    final imageLinks = await _storageAPI.uploadImage(images);
-    Tweet tweet = Tweet(
-      text: text,
-      hashtags: hashtags,
-      link: link,
-      imageLinks: imageLinks,
-      uid: user.uid,
-      tweetType: TweetType.image,
-      tweetedAt: DateTime.now(),
-      likes: const [],
-      commentIds: const [],
-      id: '',
-      reshareCount: 0,
-      retweetedBy: '',
-      repliedTo: repliedTo,
-    );
-    final res = await _tweetAPI.shareTweet(tweet);
-    
-    res.fold((l) => showSnackBar(context, l.message), (r) {
-      if (repliedToUserId.isNotEmpty) {
-        _notificationController.createNotification(
-          text: '${user.name} replied to your tweet!',
-          postId: r.$id,
-          notificationType: NotificationType.reply,
-          uid: repliedToUserId,
-        );
-      }
-    });
-    state = false;
-  }
+  required List<File> images,
+  required String text,
+  required BuildContext context,
+  required String repliedTo,
+  required String repliedToUserId,
+}) async {
+  state = true;
+  final hashtags = _getHashtagsFromText(text);
+  String link = _getLinkFromText(text);
+  final user = _ref.read(currentUserDetailsProvider).value!;
+  final imageLinks = await _storageAPI.uploadImage(images);
+
+  // Call classification API
+  final classificationResult = await _classifyTweet(text);
+
+  Tweet tweet = Tweet(
+    text: text,
+    hashtags: hashtags,
+    link: link,
+    imageLinks: imageLinks,
+    uid: user.uid,
+    tweetType: TweetType.image,
+    tweetedAt: DateTime.now(),
+    likes: const [],
+    commentIds: const [],
+    id: '',
+    reshareCount: 0,
+    retweetedBy: '',
+    repliedTo: repliedTo,
+    category: classificationResult['classification'] ?? 'unknown',
+    persuasiveMessage: classificationResult['persuasiveMessage'] ?? '',
+  );
+
+  final res = await _tweetAPI.shareTweet(tweet);
+  res.fold((l) => showSnackBar(context, l.message), (r) {
+    if (repliedToUserId.isNotEmpty) {
+      _notificationController.createNotification(
+        text: '${user.name} replied to your tweet!',
+        postId: r.$id,
+        notificationType: NotificationType.reply,
+        uid: repliedToUserId,
+      );
+    }
+  });
+  state = false;
+}
+
 
   Future<void> _shareTextTweet({
-    required String text,
-    required BuildContext context,
-    required repliedTo,
-    required String
-        repliedToUserId, // Update the state to indicate the tweet has been shared
-  }) async {
-    state = true;
-    final hashtags = _getHashtagsFromText(text);
-    String link = _getLinkFromText(text);
-    final user = _ref.read(currentUserDetailsProvider).value;
+  required String text,
+  required BuildContext context,
+  required repliedTo,
+  required String repliedToUserId,
+}) async {
+  state = true;
+  final hashtags = _getHashtagsFromText(text);
+  String link = _getLinkFromText(text);
+  final user = _ref.read(currentUserDetailsProvider).value!;
 
-    // ignore: unused_local_variable
-    Tweet tweet = Tweet(
-      text: text,
-      hashtags: hashtags,
-      link: link,
-      imageLinks: const [],
-      uid: user!.uid,
-      tweetType: TweetType.text,
-      tweetedAt: DateTime.now(),
-      likes: const [],
-      commentIds: const [],
-      id: '',
-      reshareCount: 0,
-      retweetedBy: '',
-      repliedTo: repliedTo,
-      //repliedToUserId: repliedToUserId,
-    );
-    final res = await _tweetAPI.shareTweet(tweet);
-    // Set the state to indicate loading
-    res.fold((l) => showSnackBar(context, l.message), (r) {
-      if (repliedToUserId.isNotEmpty) {
-        _notificationController.createNotification(
-          text: '${user.name} replied to your tweet!',
-          postId: r.$id,
-          notificationType: NotificationType.reply,
-          uid: repliedToUserId,
-        );
-      }
-    });
-    state = false;  // Set the state to indicate loading
-  }
+  // Call classification API
+  final classificationResult = await _classifyTweet(text);
+  
+  Tweet tweet = Tweet(
+    text: text,
+    hashtags: hashtags,
+    link: link,
+    imageLinks: const [],
+    uid: user.uid,
+    tweetType: TweetType.text,
+    tweetedAt: DateTime.now(),
+    likes: const [],
+    commentIds: const [],
+    id: '',
+    reshareCount: 0,
+    retweetedBy: '',
+    repliedTo: repliedTo,
+    category: classificationResult['classification'] ?? 'unknown',
+    persuasiveMessage: classificationResult['persuasiveMessage'] ?? '',
+  );
+
+  final res = await _tweetAPI.shareTweet(tweet);
+  res.fold((l) => showSnackBar(context, l.message), (r) {
+    if (repliedToUserId.isNotEmpty) {
+      _notificationController.createNotification(
+        text: '${user.name} replied to your tweet!',
+        postId: r.$id,
+        notificationType: NotificationType.reply,
+        uid: repliedToUserId,
+      );
+    }
+  });
+  state = false;
+}
 
   String _getLinkFromText(String text) {
     String link = '';

@@ -10,19 +10,14 @@ import 'package:twitter_clone/firebase_options.dart';
 import 'package:twitter_clone/theme/theme.dart';
 
 
-Future<void> main() async{
-  
-   // Initialize Firebase
-  await Firebase.initializeApp(
-    options: DefaultFirebaseOptions.currentPlatform,
-  );
-
+void main(){
   runApp(
     const ProviderScope(
       child: MyApp(),
     ),
   );
 }
+  
 
 class MyApp extends ConsumerWidget {
   const MyApp({super.key});

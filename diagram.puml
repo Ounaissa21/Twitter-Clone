@@ -1,0 +1,597 @@
+@startuml
+set namespaceSeparator ::
+
+abstract class "twitter_clone::apis::auth_api.dart::IAuthAPI" {
+  +dynamic signUP()
+  +dynamic login()
+  +dynamic currentUserAccount()
+  +dynamic logout()
+}
+
+class "twitter_clone::apis::auth_api.dart::AuthAPI" {
+  -Account _account
+  +dynamic currentUserAccount()
+  +dynamic signUP()
+  +dynamic login()
+  +dynamic logout()
+}
+
+"twitter_clone::apis::auth_api.dart::AuthAPI" o-- "appwrite::appwrite.dart::Account"
+"twitter_clone::apis::auth_api.dart::IAuthAPI" <|-- "twitter_clone::apis::auth_api.dart::AuthAPI"
+
+abstract class "twitter_clone::apis::notification_api.dart::INotificationAPI" {
+  +dynamic createNotification()
+  +dynamic getNotifications()
+  +Stream<RealtimeMessage> getLatestNotification()
+}
+
+class "twitter_clone::apis::notification_api.dart::NotificationAPI" {
+  -Databases _db
+  -Realtime _realtime
+  +dynamic createNotification()
+  +dynamic getNotifications()
+  +Stream<RealtimeMessage> getLatestNotification()
+}
+
+"twitter_clone::apis::notification_api.dart::NotificationAPI" o-- "appwrite::appwrite.dart::Databases"
+"twitter_clone::apis::notification_api.dart::NotificationAPI" o-- "appwrite::src::realtime.dart::Realtime"
+"twitter_clone::apis::notification_api.dart::INotificationAPI" <|-- "twitter_clone::apis::notification_api.dart::NotificationAPI"
+
+class "twitter_clone::apis::storage_api.dart::StorageAPI" {
+  -Storage _storage
+  +dynamic uploadImage()
+}
+
+"twitter_clone::apis::storage_api.dart::StorageAPI" o-- "appwrite::appwrite.dart::Storage"
+
+abstract class "twitter_clone::apis::tweet_api.dart::ITweetApi" {
+  +dynamic shareTweet()
+  +dynamic getTweets()
+  +Stream<RealtimeMessage> getLatestTweet()
+  +dynamic likeTweet()
+  +dynamic updateReshareCount()
+  +dynamic getRepliesToTweet()
+  +dynamic getTweetById()
+  +dynamic getUserTweets()
+  +dynamic getTweetsByHashtag()
+}
+
+class "twitter_clone::apis::tweet_api.dart::TweetAPI" {
+  -Databases _db
+  -Realtime _realtime
+  +dynamic shareTweet()
+  +dynamic getTweets()
+  +Stream<RealtimeMessage> getLatestTweet()
+  +dynamic likeTweet()
+  +dynamic updateReshareCount()
+  +dynamic getRepliesToTweet()
+  +dynamic getTweetById()
+  +dynamic getUserTweets()
+  +dynamic getTweetsByHashtag()
+}
+
+"twitter_clone::apis::tweet_api.dart::TweetAPI" o-- "appwrite::appwrite.dart::Databases"
+"twitter_clone::apis::tweet_api.dart::TweetAPI" o-- "appwrite::src::realtime.dart::Realtime"
+"twitter_clone::apis::tweet_api.dart::ITweetApi" <|-- "twitter_clone::apis::tweet_api.dart::TweetAPI"
+
+abstract class "twitter_clone::apis::user_api.dart::IUserAPI" {
+  +dynamic saveUserData()
+  +dynamic getUserData()
+  +dynamic searchUserByName()
+  +dynamic updateUserData()
+  +Stream<RealtimeMessage> getLatestUserProfileData()
+  +dynamic followUser()
+  +dynamic addToFollowing()
+}
+
+class "twitter_clone::apis::user_api.dart::UserAPI" {
+  -Databases _db
+  -Realtime _realtime
+  +dynamic saveUserData()
+  +dynamic getUserData()
+  +dynamic searchUserByName()
+  +dynamic updateUserData()
+  +Stream<RealtimeMessage> getLatestUserProfileData()
+  +dynamic followUser()
+  +dynamic addToFollowing()
+}
+
+"twitter_clone::apis::user_api.dart::UserAPI" o-- "appwrite::appwrite.dart::Databases"
+"twitter_clone::apis::user_api.dart::UserAPI" o-- "appwrite::src::realtime.dart::Realtime"
+"twitter_clone::apis::user_api.dart::IUserAPI" <|-- "twitter_clone::apis::user_api.dart::UserAPI"
+
+class "twitter_clone::common::error_page.dart::ErrorText" {
+  +String error
+  +Widget build()
+}
+
+"flutter::src::widgets::framework.dart::StatelessWidget" <|-- "twitter_clone::common::error_page.dart::ErrorText"
+
+class "twitter_clone::common::error_page.dart::ErrorPage" {
+  +String error
+  +Widget build()
+}
+
+"flutter::src::widgets::framework.dart::StatelessWidget" <|-- "twitter_clone::common::error_page.dart::ErrorPage"
+
+class "twitter_clone::common::loading_page.dart::Loader" {
+  +Widget build()
+}
+
+"flutter::src::widgets::framework.dart::StatelessWidget" <|-- "twitter_clone::common::loading_page.dart::Loader"
+
+class "twitter_clone::common::loading_page.dart::LoadingPage" {
+  +Widget build()
+}
+
+"flutter::src::widgets::framework.dart::StatelessWidget" <|-- "twitter_clone::common::loading_page.dart::LoadingPage"
+
+class "twitter_clone::common::rounded_small_button.dart::RoundedSmallButton" {
+  +void Function() onTap
+  +String label
+  +Color backgroundColor
+  +Color textColor
+  +Widget build()
+}
+
+"twitter_clone::common::rounded_small_button.dart::RoundedSmallButton" o-- "dart::ui::void Function()"
+"twitter_clone::common::rounded_small_button.dart::RoundedSmallButton" o-- "dart::ui::Color"
+"flutter::src::widgets::framework.dart::StatelessWidget" <|-- "twitter_clone::common::rounded_small_button.dart::RoundedSmallButton"
+
+class "twitter_clone::constants::appwrite_constants.dart::AppwriteConstants" {
+  {static} +String databaseId
+  {static} +String projectId
+  {static} +String endPoint
+  {static} +String usersCollection
+  {static} +String tweetsCollection
+  {static} +String notificationsCollection
+  {static} +String imagesBucket
+  {static} +String imageURL()
+}
+
+class "twitter_clone::constants::assets_constants.dart::AssetsConstants" {
+  {static} -String _svgsPath
+  {static} +String twitterLogo
+  {static} +String homeFilledIcon
+  {static} +String homeOutlinedIcon
+  {static} +String notifFilledIcon
+  {static} +String notifOutlinedIcon
+  {static} +String searchIcon
+  {static} +String gifIcon
+  {static} +String emojiIcon
+  {static} +String galleryIcon
+  {static} +String commentIcon
+  {static} +String retweetIcon
+  {static} +String likeOutlinedIcon
+  {static} +String likeFilledIcon
+  {static} +String viewsIcon
+  {static} +String verifiedIcon
+  {static} +String Gold
+}
+
+class "twitter_clone::constants::ui_constants.dart::UIContants" {
+  {static} +List<Widget> bottomTabBarPages
+  {static} +AppBar appBar()
+}
+
+class "twitter_clone::core::enums::notification_type_enum.dart::NotificationType" {
+  +int index
+  {static} +List<NotificationType> values
+  {static} +NotificationType like
+}
+
+"twitter_clone::core::enums::notification_type_enum.dart::NotificationType" o-- "twitter_clone::core::enums::notification_type_enum.dart::NotificationType"
+"dart::core::Enum" <|-- "twitter_clone::core::enums::notification_type_enum.dart::NotificationType"
+
+class "twitter_clone::core::enums::tweet_type_enum.dart::TweetType" {
+  +int index
+  {static} +List<TweetType> values
+  {static} +TweetType text
+}
+
+"twitter_clone::core::enums::tweet_type_enum.dart::TweetType" o-- "twitter_clone::core::enums::tweet_type_enum.dart::TweetType"
+"dart::core::Enum" <|-- "twitter_clone::core::enums::tweet_type_enum.dart::TweetType"
+
+class "twitter_clone::core::failure.dart::Failure" {
+  +String message
+  +StackTrace strackTrace
+}
+
+class "twitter_clone::features::auth::controller::auth_controller.dart::AuthController" {
+  -AuthAPI _authAPI
+  -UserAPI _userAPI
+  +dynamic currentUser()
+  +void signUp()
+  +void login()
+  +dynamic getUserData()
+  +void logout()
+}
+
+"twitter_clone::features::auth::controller::auth_controller.dart::AuthController" o-- "twitter_clone::apis::auth_api.dart::AuthAPI"
+"twitter_clone::features::auth::controller::auth_controller.dart::AuthController" o-- "twitter_clone::apis::user_api.dart::UserAPI"
+"state_notifier::state_notifier.dart::StateNotifier" <|-- "twitter_clone::features::auth::controller::auth_controller.dart::AuthController"
+
+class "twitter_clone::features::auth::view::login_view.dart::LoginView" {
+  {static} +dynamic route()
+  +ConsumerState<LoginView> createState()
+}
+
+"flutter_riverpod::src::consumer.dart::ConsumerStatefulWidget" <|-- "twitter_clone::features::auth::view::login_view.dart::LoginView"
+
+class "twitter_clone::features::auth::view::login_view.dart::_LoginViewState" {
+  +AppBar appbar
+  +TextEditingController emailController
+  +TextEditingController passwordController
+  +void dispose()
+  +void onLogin()
+  +Widget build()
+}
+
+"twitter_clone::features::auth::view::login_view.dart::_LoginViewState" o-- "flutter::src::material::app_bar.dart::AppBar"
+"twitter_clone::features::auth::view::login_view.dart::_LoginViewState" o-- "flutter::src::widgets::editable_text.dart::TextEditingController"
+"flutter_riverpod::src::consumer.dart::ConsumerState" <|-- "twitter_clone::features::auth::view::login_view.dart::_LoginViewState"
+
+class "twitter_clone::features::auth::view::signup_view.dart::SignupView" {
+  {static} +dynamic route()
+  +ConsumerState<SignupView> createState()
+}
+
+"flutter_riverpod::src::consumer.dart::ConsumerStatefulWidget" <|-- "twitter_clone::features::auth::view::signup_view.dart::SignupView"
+
+class "twitter_clone::features::auth::view::signup_view.dart::_SignupViewState" {
+  +AppBar appbar
+  +TextEditingController emailController
+  +TextEditingController passwordController
+  +void dispose()
+  +void onSignUP()
+  +Widget build()
+}
+
+"twitter_clone::features::auth::view::signup_view.dart::_SignupViewState" o-- "flutter::src::material::app_bar.dart::AppBar"
+"twitter_clone::features::auth::view::signup_view.dart::_SignupViewState" o-- "flutter::src::widgets::editable_text.dart::TextEditingController"
+"flutter_riverpod::src::consumer.dart::ConsumerState" <|-- "twitter_clone::features::auth::view::signup_view.dart::_SignupViewState"
+
+class "twitter_clone::features::auth::widgets::auth_field.dart::AuthField" {
+  +TextEditingController controller
+  +String hintText
+  +Widget build()
+}
+
+"twitter_clone::features::auth::widgets::auth_field.dart::AuthField" o-- "flutter::src::widgets::editable_text.dart::TextEditingController"
+"flutter::src::widgets::framework.dart::StatelessWidget" <|-- "twitter_clone::features::auth::widgets::auth_field.dart::AuthField"
+
+class "twitter_clone::features::explore::controller::explore_controller.dart::ExploreController" {
+  -UserAPI _userAPI
+  +dynamic searchUser()
+}
+
+"twitter_clone::features::explore::controller::explore_controller.dart::ExploreController" o-- "twitter_clone::apis::user_api.dart::UserAPI"
+"state_notifier::state_notifier.dart::StateNotifier" <|-- "twitter_clone::features::explore::controller::explore_controller.dart::ExploreController"
+
+class "twitter_clone::features::explore::view::explore_view.dart::ExploreView" {
+  +ConsumerState<ConsumerStatefulWidget> createState()
+}
+
+"flutter_riverpod::src::consumer.dart::ConsumerStatefulWidget" <|-- "twitter_clone::features::explore::view::explore_view.dart::ExploreView"
+
+class "twitter_clone::features::explore::view::explore_view.dart::_ExploreViewState" {
+  +TextEditingController searchController
+  +bool isShowUsers
+  +void dispose()
+  +Widget build()
+}
+
+"twitter_clone::features::explore::view::explore_view.dart::_ExploreViewState" o-- "flutter::src::widgets::editable_text.dart::TextEditingController"
+"flutter_riverpod::src::consumer.dart::ConsumerState" <|-- "twitter_clone::features::explore::view::explore_view.dart::_ExploreViewState"
+
+class "twitter_clone::features::explore::widgets::search_tile.dart::SearchTitle" {
+  +UserModel userModel
+  +Widget build()
+}
+
+"twitter_clone::features::explore::widgets::search_tile.dart::SearchTitle" o-- "twitter_clone::models::user_model.dart::UserModel"
+"flutter::src::widgets::framework.dart::StatelessWidget" <|-- "twitter_clone::features::explore::widgets::search_tile.dart::SearchTitle"
+
+class "twitter_clone::features::home::view::home_view.dart::HomeView" {
+  {static} +dynamic route()
+  +State<HomeView> createState()
+}
+
+"flutter::src::widgets::framework.dart::StatefulWidget" <|-- "twitter_clone::features::home::view::home_view.dart::HomeView"
+
+class "twitter_clone::features::home::view::home_view.dart::_HomeViewState" {
+  -int _page
+  +AppBar appBar
+  +void onPageChange()
+  +dynamic onCreateTweet()
+  +Widget build()
+}
+
+"twitter_clone::features::home::view::home_view.dart::_HomeViewState" o-- "flutter::src::material::app_bar.dart::AppBar"
+"flutter::src::widgets::framework.dart::State" <|-- "twitter_clone::features::home::view::home_view.dart::_HomeViewState"
+
+class "twitter_clone::features::home::widgets::side_drawer.dart::SideDrawer" {
+  +Widget build()
+}
+
+"flutter_riverpod::src::consumer.dart::ConsumerWidget" <|-- "twitter_clone::features::home::widgets::side_drawer.dart::SideDrawer"
+
+class "twitter_clone::features::notification::controller::notification_controller.dart::NotificationController" {
+  -NotificationAPI _notificationAPI
+  +void createNotification()
+  +dynamic getNotifications()
+}
+
+"twitter_clone::features::notification::controller::notification_controller.dart::NotificationController" o-- "twitter_clone::apis::notification_api.dart::NotificationAPI"
+"state_notifier::state_notifier.dart::StateNotifier" <|-- "twitter_clone::features::notification::controller::notification_controller.dart::NotificationController"
+
+class "twitter_clone::features::notification::view::notification_view.dart::NotificationView" {
+  +Widget build()
+}
+
+"flutter_riverpod::src::consumer.dart::ConsumerWidget" <|-- "twitter_clone::features::notification::view::notification_view.dart::NotificationView"
+
+class "twitter_clone::features::notification::widgets::notification_tile.dart::NotificationTile" {
+  +Notification notification
+  +Widget build()
+}
+
+"twitter_clone::features::notification::widgets::notification_tile.dart::NotificationTile" o-- "twitter_clone::models::notification_model.dart::Notification"
+"flutter::src::widgets::framework.dart::StatelessWidget" <|-- "twitter_clone::features::notification::widgets::notification_tile.dart::NotificationTile"
+
+class "twitter_clone::features::tweet::controller::tweet_controller.dart::TweetController" {
+  -TweetAPI _tweetAPI
+  -StorageAPI _storageAPI
+  -Ref<Object?> _ref
+  -NotificationController _notificationController
+  +dynamic getTweets()
+  +dynamic getTweetById()
+  +void likeTweet()
+  +void reshareTweet()
+  +dynamic getRepliesToTweet()
+  +dynamic getTweetsByHashtag()
+  +void shareTweet()
+  -void _shareImageTweet()
+  -dynamic _shareTextTweet()
+  -String _getLinkFromText()
+  -List<String> _getHashtagsFromText()
+}
+
+"twitter_clone::features::tweet::controller::tweet_controller.dart::TweetController" o-- "twitter_clone::apis::tweet_api.dart::TweetAPI"
+"twitter_clone::features::tweet::controller::tweet_controller.dart::TweetController" o-- "twitter_clone::apis::storage_api.dart::StorageAPI"
+"twitter_clone::features::tweet::controller::tweet_controller.dart::TweetController" o-- "riverpod::src::framework.dart::Ref<Object>"
+"twitter_clone::features::tweet::controller::tweet_controller.dart::TweetController" o-- "twitter_clone::features::notification::controller::notification_controller.dart::NotificationController"
+"state_notifier::state_notifier.dart::StateNotifier" <|-- "twitter_clone::features::tweet::controller::tweet_controller.dart::TweetController"
+
+class "twitter_clone::features::tweet::views::create_tweet_view.dart::CreateTweetScreen" {
+  {static} +dynamic route()
+  +ConsumerState<ConsumerStatefulWidget> createState()
+}
+
+"flutter_riverpod::src::consumer.dart::ConsumerStatefulWidget" <|-- "twitter_clone::features::tweet::views::create_tweet_view.dart::CreateTweetScreen"
+
+class "twitter_clone::features::tweet::views::create_tweet_view.dart::_CreateTweetScreenState" {
+  +TextEditingController tweetTextController
+  +List<File> images
+  +void dispose()
+  +void shareTweet()
+  +void onPickImages()
+  +Widget build()
+}
+
+"twitter_clone::features::tweet::views::create_tweet_view.dart::_CreateTweetScreenState" o-- "flutter::src::widgets::editable_text.dart::TextEditingController"
+"flutter_riverpod::src::consumer.dart::ConsumerState" <|-- "twitter_clone::features::tweet::views::create_tweet_view.dart::_CreateTweetScreenState"
+
+class "twitter_clone::features::tweet::views::hashtag_view.dart::HashtagView" {
+  +String hashtag
+  {static} +dynamic route()
+  +Widget build()
+}
+
+"flutter_riverpod::src::consumer.dart::ConsumerWidget" <|-- "twitter_clone::features::tweet::views::hashtag_view.dart::HashtagView"
+
+class "twitter_clone::features::tweet::views::twitter_reply_view.dart::TwitterReplyScreen" {
+  +Tweet tweet
+  {static} +dynamic route()
+  +Widget build()
+}
+
+"twitter_clone::features::tweet::views::twitter_reply_view.dart::TwitterReplyScreen" o-- "twitter_clone::models::tweet_model.dart::Tweet"
+"flutter_riverpod::src::consumer.dart::ConsumerWidget" <|-- "twitter_clone::features::tweet::views::twitter_reply_view.dart::TwitterReplyScreen"
+
+class "twitter_clone::features::tweet::widgets::carousel_image.dart::CarouselImage" {
+  +List<String> imageLinks
+  +State<CarouselImage> createState()
+}
+
+"flutter::src::widgets::framework.dart::StatefulWidget" <|-- "twitter_clone::features::tweet::widgets::carousel_image.dart::CarouselImage"
+
+class "twitter_clone::features::tweet::widgets::carousel_image.dart::_CarouselImageState" {
+  -int _current
+  +Widget build()
+}
+
+"flutter::src::widgets::framework.dart::State" <|-- "twitter_clone::features::tweet::widgets::carousel_image.dart::_CarouselImageState"
+
+class "twitter_clone::features::tweet::widgets::hashtag_text.dart::HashtagText" {
+  +String text
+  +Widget build()
+}
+
+"flutter::src::widgets::framework.dart::StatelessWidget" <|-- "twitter_clone::features::tweet::widgets::hashtag_text.dart::HashtagText"
+
+class "twitter_clone::features::tweet::widgets::tweet_card.dart::TweetCard" {
+  +Tweet tweet
+  +Widget build()
+}
+
+"twitter_clone::features::tweet::widgets::tweet_card.dart::TweetCard" o-- "twitter_clone::models::tweet_model.dart::Tweet"
+"flutter_riverpod::src::consumer.dart::ConsumerWidget" <|-- "twitter_clone::features::tweet::widgets::tweet_card.dart::TweetCard"
+
+class "twitter_clone::features::tweet::widgets::tweet_icon_button.dart::TweetIconButton" {
+  +String pathName
+  +String text
+  +void Function() onTap
+  +Widget build()
+}
+
+"twitter_clone::features::tweet::widgets::tweet_icon_button.dart::TweetIconButton" o-- "dart::ui::void Function()"
+"flutter::src::widgets::framework.dart::StatelessWidget" <|-- "twitter_clone::features::tweet::widgets::tweet_icon_button.dart::TweetIconButton"
+
+class "twitter_clone::features::tweet::widgets::tweet_list.dart::TweetList" {
+  +Widget build()
+}
+
+"flutter_riverpod::src::consumer.dart::ConsumerWidget" <|-- "twitter_clone::features::tweet::widgets::tweet_list.dart::TweetList"
+
+class "twitter_clone::features::user_profile::controller::user_profile_controller.dart::UserProfileController" {
+  -TweetAPI _tweetAPI
+  -StorageAPI _storageAPI
+  -UserAPI _userAPI
+  -NotificationController _notificationController
+  +dynamic getUserTweets()
+  +void updateUserProfile()
+  +void followUser()
+}
+
+"twitter_clone::features::user_profile::controller::user_profile_controller.dart::UserProfileController" o-- "twitter_clone::apis::tweet_api.dart::TweetAPI"
+"twitter_clone::features::user_profile::controller::user_profile_controller.dart::UserProfileController" o-- "twitter_clone::apis::storage_api.dart::StorageAPI"
+"twitter_clone::features::user_profile::controller::user_profile_controller.dart::UserProfileController" o-- "twitter_clone::apis::user_api.dart::UserAPI"
+"twitter_clone::features::user_profile::controller::user_profile_controller.dart::UserProfileController" o-- "twitter_clone::features::notification::controller::notification_controller.dart::NotificationController"
+"state_notifier::state_notifier.dart::StateNotifier" <|-- "twitter_clone::features::user_profile::controller::user_profile_controller.dart::UserProfileController"
+
+class "twitter_clone::features::user_profile::view::edit_profile_view.dart::EditProfileView" {
+  {static} +dynamic route()
+  +ConsumerState<ConsumerStatefulWidget> createState()
+}
+
+"flutter_riverpod::src::consumer.dart::ConsumerStatefulWidget" <|-- "twitter_clone::features::user_profile::view::edit_profile_view.dart::EditProfileView"
+
+class "twitter_clone::features::user_profile::view::edit_profile_view.dart::_EditProfileVieState" {
+  +TextEditingController nameController
+  +TextEditingController bioController
+  +File? bannerFile
+  +File? profileFile
+  +void initState()
+  +void dispose()
+  +void selectBannerImage()
+  +void selectProfileImage()
+  +Widget build()
+}
+
+"twitter_clone::features::user_profile::view::edit_profile_view.dart::_EditProfileVieState" o-- "flutter::src::widgets::editable_text.dart::TextEditingController"
+"twitter_clone::features::user_profile::view::edit_profile_view.dart::_EditProfileVieState" o-- "dart::io::File"
+"flutter_riverpod::src::consumer.dart::ConsumerState" <|-- "twitter_clone::features::user_profile::view::edit_profile_view.dart::_EditProfileVieState"
+
+class "twitter_clone::features::user_profile::view::user_profile_view.dart::UserProfileView" {
+  +UserModel userModel
+  {static} +dynamic route()
+  +Widget build()
+}
+
+"twitter_clone::features::user_profile::view::user_profile_view.dart::UserProfileView" o-- "twitter_clone::models::user_model.dart::UserModel"
+"flutter_riverpod::src::consumer.dart::ConsumerWidget" <|-- "twitter_clone::features::user_profile::view::user_profile_view.dart::UserProfileView"
+
+class "twitter_clone::features::user_profile::widgets::follow_count.dart::FollowCount" {
+  +int count
+  +String text
+  +Widget build()
+}
+
+"flutter::src::widgets::framework.dart::StatelessWidget" <|-- "twitter_clone::features::user_profile::widgets::follow_count.dart::FollowCount"
+
+class "twitter_clone::features::user_profile::widgets::user_profile.dart::UserProfile" {
+  +UserModel user
+  +Widget build()
+}
+
+"twitter_clone::features::user_profile::widgets::user_profile.dart::UserProfile" o-- "twitter_clone::models::user_model.dart::UserModel"
+"flutter_riverpod::src::consumer.dart::ConsumerWidget" <|-- "twitter_clone::features::user_profile::widgets::user_profile.dart::UserProfile"
+
+class "twitter_clone::firebase_options.dart::DefaultFirebaseOptions" {
+  {static} +FirebaseOptions android
+  {static} +FirebaseOptions currentPlatform
+}
+
+"twitter_clone::firebase_options.dart::DefaultFirebaseOptions" o-- "firebase_core_platform_interface::firebase_core_platform_interface.dart::FirebaseOptions"
+
+class "twitter_clone::main.dart::MyApp" {
+  +Widget build()
+}
+
+"flutter_riverpod::src::consumer.dart::ConsumerWidget" <|-- "twitter_clone::main.dart::MyApp"
+
+class "twitter_clone::models::notification_model.dart::Notification" {
+  +String text
+  +String postId
+  +String id
+  +String uid
+  +NotificationType notificationType
+  +int hashCode
+  +Notification copyWith()
+  +Map<String, dynamic> toMap()
+  +String toString()
+  +bool ==()
+}
+
+"twitter_clone::models::notification_model.dart::Notification" o-- "twitter_clone::core::enums::notification_type_enum.dart::NotificationType"
+
+class "twitter_clone::models::tweet_model.dart::Tweet" {
+  +String text
+  +List<String> hashtags
+  +String link
+  +List<String> imageLinks
+  +String uid
+  +TweetType tweetType
+  +DateTime tweetedAt
+  +List<String> likes
+  +List<String> commentIds
+  +String id
+  +int reshareCount
+  +String retweetedBy
+  +String repliedTo
+  +int hashCode
+  +Tweet copyWith()
+  +Map<String, dynamic> toMap()
+  +String toString()
+  +bool ==()
+}
+
+"twitter_clone::models::tweet_model.dart::Tweet" o-- "twitter_clone::core::enums::tweet_type_enum.dart::TweetType"
+
+class "twitter_clone::models::user_model.dart::UserModel" {
+  +String email
+  +String name
+  +List<String> followers
+  +List<String> following
+  +String profilePic
+  +String bannerPic
+  +String uid
+  +String bio
+  +bool isTwitterBlue
+  +int hashCode
+  +UserModel copyWith()
+  +Map<String, dynamic> toMap()
+  +String toString()
+  +bool ==()
+}
+
+class "twitter_clone::theme::app_theme.dart::AppTheme" {
+  {static} +ThemeData theme
+}
+
+"twitter_clone::theme::app_theme.dart::AppTheme" o-- "flutter::src::material::theme_data.dart::ThemeData"
+
+class "twitter_clone::theme::pallete.dart::Pallete" {
+  {static} +Color backgroundColor
+  {static} +Color searchBarColor
+  {static} +Color blueColor
+  {static} +Color whiteColor
+  {static} +Color greyColor
+  {static} +Color redColor
+}
+
+"twitter_clone::theme::pallete.dart::Pallete" o-- "dart::ui::Color"
+
+
+@enduml
