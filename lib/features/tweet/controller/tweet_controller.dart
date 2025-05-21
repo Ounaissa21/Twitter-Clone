@@ -1,4 +1,3 @@
-import 'dart:convert';
 import 'dart:io';
 import 'package:appwrite/appwrite.dart';
 import 'package:flutter/cupertino.dart';
@@ -7,13 +6,20 @@ import 'package:twitter_clone/apis/storage_api.dart';
 import 'package:twitter_clone/apis/tweet_api.dart';
 import 'package:twitter_clone/core/enums/notification_type_enum.dart';
 import 'package:twitter_clone/core/enums/tweet_type_enum.dart';
-import 'package:twitter_clone/core/utils.dart';
+import 'package:twitter_clone/core/utils.dart'; // Assuming showSnackBar is here
 import 'package:twitter_clone/features/auth/controller/auth_controller.dart';
 import 'package:twitter_clone/features/notification/controller/notification_controller.dart';
 import 'package:twitter_clone/models/tweet_model.dart';
 import 'package:twitter_clone/models/user_model.dart';
 import 'package:http/http.dart' as http;
-//import 'package:twitter_clone/apis/tweet_api.dart';
+import 'dart:convert';
+import 'package:fpdart/fpdart.dart'; // Import fpdart
+
+// Define a custom failure type for better error messages
+class ClassificationFailure {
+  final String message;
+  ClassificationFailure(this.message);
+}
 
 final tweetControllerProvider = StateNotifierProvider<TweetController, bool>(
   (ref) {
@@ -145,37 +151,60 @@ class TweetController extends StateNotifier<bool> {
     return document.map((tweet) => Tweet.fromMap(tweet.data)).toList();
   }
 
-
-   Future<List<Tweet>> getTweetsByHashtag(String hashtag) async {
+  Future<List<Tweet>> getTweetsByHashtag(String hashtag) async {
     final document = await _tweetAPI.getTweetsByHashtag(hashtag);
     return document.map((tweet) => Tweet.fromMap(tweet.data)).toList();
   }
 
+  // Refactored method to call FastAPI endpoint with Either type for error handling
+  Future<Either<ClassificationFailure, Map<String, dynamic>>> classifyTweet(
+      String tweetText) async {
+    try {
+      final response = await http.post(
+        Uri.parse('http://127.0.0.1:8000/classify_post'), // Replace with your FastAPI server URL
+        headers: <String, String>{
+          'Content-Type': 'application/json; charset=UTF-8',
+        },
+        body: jsonEncode(<String, String>{
+          'text': tweetText,
+        }),
+      ).timeout(const Duration(seconds: 10)); // Add a timeout for network requests
 
-
-  Future<Map<String, dynamic>> _classifyTweet(String text) async {
-  try {
-    final url = Uri.parse('http://192.168.137.1:8000/classify_post');
-    final headers = {'Content-Type': 'application/json'};
-    final body = jsonEncode({'text': text});
-
-    final response = await http.post(url, headers: headers, body: body);
-
-    if (response.statusCode == 200) {
-      return jsonDecode(response.body);
-    } else {
-      throw Exception('Failed to classify tweet: ${response.statusCode}');
+      if (response.statusCode == 200) {
+        return Right(jsonDecode(response.body));
+      } else if (response.statusCode >= 400 && response.statusCode < 500) {
+        // Client-side errors (e.g., bad request from client)
+        print('Client error classifying tweet: ${response.statusCode} - ${response.body}');
+        return Left(ClassificationFailure('Failed to classify tweet: Invalid request.'));
+      } else if (response.statusCode >= 500) {
+        // Server-side errors
+        print('Server error classifying tweet: ${response.statusCode} - ${response.body}');
+        return Left(ClassificationFailure('Failed to classify tweet: Server error.'));
+      } else {
+        // Other unexpected status codes
+        print('Unexpected status code classifying tweet: ${response.statusCode} - ${response.body}');
+        return Left(ClassificationFailure('Failed to classify tweet: Unexpected error.'));
+      }
+    } on SocketException {
+      // No internet connection or host unreachable
+      print('Network error calling FastAPI: SocketException');
+      return Left(ClassificationFailure('No internet connection or server unreachable.'));
+    } on FormatException {
+      // Malformed JSON response
+      print('Data format error calling FastAPI: FormatException');
+      return Left(ClassificationFailure('Received malformed data from classification server.'));
+    } on http.ClientException catch (e) {
+      // Other http client specific errors (e.g., connection refused)
+      print('HTTP Client error calling FastAPI: ${e.message}');
+      return Left(ClassificationFailure('Could not connect to classification server: ${e.message}'));
+    } on Exception catch (e) {
+      // Catch all other unexpected errors
+      print('An unknown error occurred calling FastAPI: $e');
+      return Left(ClassificationFailure('An unknown error occurred during classification.'));
     }
-  } catch (e) {
-    debugPrint('Classification error: $e');
-    return {
-      'classification': '',
-      'persuasiveMessage': ''
-    };
   }
-}
 
-  Future<void> shareTweet({
+  void shareTweet({
     required List<File> images,
     required String text,
     required BuildContext context,
@@ -187,118 +216,167 @@ class TweetController extends StateNotifier<bool> {
       return;
     }
 
-    if (images.isNotEmpty) {
-       _shareImageTweet(
-        context: context,
-        images: images,
-        text: text,
-        repliedTo: repliedTo,
-        repliedToUserId: repliedToUserId,
-      );
-    } else {
-      await _shareTextTweet(
-        context: context,
-        text: text,
-        repliedTo: repliedTo,
-        repliedToUserId: repliedToUserId,
-      );
+    state = true; // Set loading state at the beginning of the shareTweet process
+
+    try {
+      if (images.isNotEmpty) {
+        await _shareImageTweet(
+          context: context,
+          images: images,
+          text: text,
+          repliedTo: repliedTo,
+          repliedToUserId: repliedToUserId,
+        );
+      } else {
+        await _shareTextTweet(
+          context: context,
+          text: text,
+          repliedTo: repliedTo,
+          repliedToUserId: repliedToUserId,
+        );
+      }
+    } finally {
+      // Ensure loading state is reset even if an error occurs
+      state = false;
     }
   }
 
-  void _shareImageTweet({
-  required List<File> images,
-  required String text,
-  required BuildContext context,
-  required String repliedTo,
-  required String repliedToUserId,
-}) async {
-  state = true;
-  final hashtags = _getHashtagsFromText(text);
-  String link = _getLinkFromText(text);
-  final user = _ref.read(currentUserDetailsProvider).value!;
-  final imageLinks = await _storageAPI.uploadImage(images);
+  Future<void> _shareImageTweet({
+    required List<File> images,
+    required String text,
+    required BuildContext context,
+    required String repliedTo,
+    required String repliedToUserId,
+  }) async {
+    final hashtags = _getHashtagsFromText(text);
+    String link = _getLinkFromText(text);
+    final user = _ref.read(currentUserDetailsProvider).value!;
 
-  // Call classification API
-  final classificationResult = await _classifyTweet(text);
+    // Call FastAPI to classify the tweet and handle the result
+    final classificationResult = await classifyTweet(text);
 
-  Tweet tweet = Tweet(
-    text: text,
-    hashtags: hashtags,
-    link: link,
-    imageLinks: imageLinks,
-    uid: user.uid,
-    tweetType: TweetType.image,
-    tweetedAt: DateTime.now(),
-    likes: const [],
-    commentIds: const [],
-    id: '',
-    reshareCount: 0,
-    retweetedBy: '',
-    repliedTo: repliedTo,
-    category: classificationResult['classification'] ?? 'unknown',
-    persuasiveMessage: classificationResult['persuasiveMessage'] ?? '',
-  );
+    String category = 'unknown'; // Default values
+    String persuasiveMessage = '';
 
-  final res = await _tweetAPI.shareTweet(tweet);
-  res.fold((l) => showSnackBar(context, l.message), (r) {
-    if (repliedToUserId.isNotEmpty) {
-      _notificationController.createNotification(
-        text: '${user.name} replied to your tweet!',
-        postId: r.$id,
-        notificationType: NotificationType.reply,
-        uid: repliedToUserId,
-      );
-    }
-  });
-  state = false;
-}
+    classificationResult.fold(
+      (failure) {
+        // Handle error from FastAPI classification
+        showSnackBar(context, 'Classification error: ${failure.message}');
+        // You might decide to proceed with default values or stop the tweet process here.
+        // For now, we proceed with defaults, but alert the user.
+      },
+      (data) {
+        // Successfully got classification data
+        category = data['category'] ?? 'unknown';
+        persuasiveMessage = data['persuasive_message'] ?? '';
+      },
+    );
 
+    // Continue with image upload even if classification failed,
+    // unless you want to block tweet creation entirely on classification failure.
+    final imageLinks = await _storageAPI.uploadImage(images);
+
+    Tweet tweet = Tweet(
+      text: text,
+      hashtags: hashtags,
+      link: link,
+      imageLinks: imageLinks,
+      uid: user.uid,
+      tweetType: TweetType.image,
+      tweetedAt: DateTime.now(),
+      likes: const [],
+      commentIds: const [],
+      id: '',
+      reshareCount: 0,
+      retweetedBy: '',
+      repliedTo: repliedTo,
+      category: category,
+      persuasiveMessage: persuasiveMessage,
+    );
+
+    final res = await _tweetAPI.shareTweet(tweet);
+
+    res.fold(
+      (l) => showSnackBar(context, 'Failed to share tweet: ${l.message}'), // More specific error message
+      (r) {
+        if (repliedToUserId.isNotEmpty) {
+          _notificationController.createNotification(
+            text: '${user.name} replied to your tweet!',
+            postId: r.$id,
+            notificationType: NotificationType.reply,
+            uid: repliedToUserId,
+          );
+        }
+        showSnackBar(context, 'Tweet shared successfully!'); // Success message
+      },
+    );
+  }
 
   Future<void> _shareTextTweet({
-  required String text,
-  required BuildContext context,
-  required repliedTo,
-  required String repliedToUserId,
-}) async {
-  state = true;
-  final hashtags = _getHashtagsFromText(text);
-  String link = _getLinkFromText(text);
-  final user = _ref.read(currentUserDetailsProvider).value!;
+    required String text,
+    required BuildContext context,
+    required repliedTo,
+    required String repliedToUserId,
+  }) async {
+    final hashtags = _getHashtagsFromText(text);
+    String link = _getLinkFromText(text);
+    final user = _ref.read(currentUserDetailsProvider).value;
 
-  // Call classification API
-  final classificationResult = await _classifyTweet(text);
-  
-  Tweet tweet = Tweet(
-    text: text,
-    hashtags: hashtags,
-    link: link,
-    imageLinks: const [],
-    uid: user.uid,
-    tweetType: TweetType.text,
-    tweetedAt: DateTime.now(),
-    likes: const [],
-    commentIds: const [],
-    id: '',
-    reshareCount: 0,
-    retweetedBy: '',
-    repliedTo: repliedTo,
-    category: classificationResult['classification'] ?? 'unknown',
-    persuasiveMessage: classificationResult['persuasiveMessage'] ?? '',
-  );
+    // Call FastAPI to classify the tweet and handle the result
+    final classificationResult = await classifyTweet(text);
 
-  final res = await _tweetAPI.shareTweet(tweet);
-  res.fold((l) => showSnackBar(context, l.message), (r) {
-    if (repliedToUserId.isNotEmpty) {
-      _notificationController.createNotification(
-        text: '${user.name} replied to your tweet!',
-        postId: r.$id,
-        notificationType: NotificationType.reply,
-        uid: repliedToUserId,
-      );
-    }
-  });
-  state = false;
-}
+    String category = 'unknown'; // Default values
+    String persuasiveMessage = '';
+
+    classificationResult.fold(
+      (failure) {
+        // Handle error from FastAPI classification
+        showSnackBar(context, 'Classification error: ${failure.message}');
+        // You might decide to proceed with default values or stop the tweet process here.
+        // For now, we proceed with defaults, but alert the user.
+      },
+      (data) {
+        // Successfully got classification data
+        category = data['category'] ?? 'unknown';
+        persuasiveMessage = data['persuasive_message'] ?? '';
+      },
+    );
+
+    Tweet tweet = Tweet(
+      text: text,
+      hashtags: hashtags,
+      link: link,
+      imageLinks: const [],
+      uid: user!.uid,
+      tweetType: TweetType.text,
+      tweetedAt: DateTime.now(),
+      likes: const [],
+      commentIds: const [],
+      id: '',
+      reshareCount: 0,
+      retweetedBy: '',
+      repliedTo: repliedTo,
+      category: category,
+      persuasiveMessage: persuasiveMessage,
+    );
+
+    final res = await _tweetAPI.shareTweet(tweet);
+
+    res.fold(
+      (l) => showSnackBar(context, 'Failed to share tweet: ${l.message}'), // More specific error message
+      (r) {
+        if (repliedToUserId.isNotEmpty) {
+          _notificationController.createNotification(
+            text: '${user.name} replied to your tweet!',
+            postId: r.$id,
+            notificationType: NotificationType.reply,
+            uid: repliedToUserId,
+          );
+        }
+        showSnackBar(context, 'Tweet shared successfully!'); // Success message
+      },
+    );
+  }
 
   String _getLinkFromText(String text) {
     String link = '';
