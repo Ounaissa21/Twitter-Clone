@@ -52,7 +52,7 @@ class Tweet {
     String? retweetedBy,
     String? repliedTo,
     String? category,
-    String? persuassiveMessage,
+    String? persuasiveMessage,
   }) {
     return Tweet(
       text: text ?? this.text,
@@ -69,13 +69,13 @@ class Tweet {
       retweetedBy: retweetedBy ?? this.retweetedBy,
       repliedTo: repliedTo ?? this.repliedTo,
       category: category ?? this.category,
-      persuasiveMessage: persuassiveMessage ?? this.persuasiveMessage,
+      persuasiveMessage: persuasiveMessage ?? this.persuasiveMessage,
     );
   }
 
   Map<String, dynamic> toMap() {
     final result = <String, dynamic>{};
-
+  
     result.addAll({'text': text});
     result.addAll({'hashtags': hashtags});
     result.addAll({'link': link});
@@ -90,7 +90,7 @@ class Tweet {
     result.addAll({'repliedTo': repliedTo});
     result.addAll({'category': category});
     result.addAll({'persuasiveMessage': persuasiveMessage});
-
+  
     return result;
   }
 
@@ -122,7 +122,7 @@ class Tweet {
   @override
   bool operator ==(Object other) {
     if (identical(this, other)) return true;
-
+  
     return other is Tweet &&
         other.text == text &&
         listEquals(other.hashtags, hashtags) &&
