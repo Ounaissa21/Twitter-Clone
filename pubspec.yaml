@@ -47,6 +47,8 @@ dependencies:
   like_button: ^2.0.4
   firebase_core: ^3.13.0
   http: ^1.2.1
+  flutter_hooks: ^0.20.0 # Ensure this is present
+  hooks_riverpod: ^2.6.1
 
 dev_dependencies:
   flutter_test:

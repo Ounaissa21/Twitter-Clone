@@ -59,7 +59,7 @@ def main(context):
                 "likes": [],
                 "commentIds": [],
                 "reshareCount": 0,
-                "retweetedBy": [], # The bot's reply tweet itself is not a retweet
+                "retweetedBy": "", # The bot's reply tweet itself is not a retweet
                 "repliedTo": tweet_id, # This is crucial: links the reply to the original tweet
                 "category": "healthy", # The bot's *reply content* is considered healthy advice
                 "persuasiveMessage": "", # No further persuasive message needed for the reply itself

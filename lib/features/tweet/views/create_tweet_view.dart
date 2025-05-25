@@ -42,7 +42,7 @@ class _CreateTweetScreenState extends ConsumerState<CreateTweetScreen> {
           repliedTo: '',
           repliedToUserId: '',
         );
-        Navigator.pop(context);
+    Navigator.pop(context);
   }
 
   void onPickImages() async {
@@ -64,7 +64,7 @@ class _CreateTweetScreenState extends ConsumerState<CreateTweetScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final currentUser = ref.watch(currentUserDetailsProvider).value;
+    //final currentUser = ref.watch(currentUserDetailsProvider).value;
     final isLoading = ref.watch(tweetControllerProvider);
     return Scaffold(
       appBar: AppBar(
@@ -83,60 +83,70 @@ class _CreateTweetScreenState extends ConsumerState<CreateTweetScreen> {
           ),
         ],
       ),
-      body: isLoading || currentUser == null
+      body: isLoading
           ? const Loader()
-          : SafeArea(
-              child: SingleChildScrollView(
-                child: Column(
-                  children: [
-                    Row(
+          : Builder(
+              builder: (context) {
+                final currentUser = ref.watch(currentUserDetailsProvider).value;
+                if (currentUser == null) {
+                  return const Loader();
+                }
+
+                return SafeArea(
+                  child: SingleChildScrollView(
+                    child: Column(
                       children: [
-                        Padding(
-                          padding: const EdgeInsets.only(
-                              left: 15.0), // Add padding to move it right
-                          child: CircleAvatar(
-                            backgroundImage:
-                                NetworkImage(currentUser.profilePic),
-                            radius: 25,
-                          ),
-                        ),
-                        const SizedBox(width: 35),
-                        Expanded(
-                          child: TextField(
-                            controller: tweetTextController,
-                            style: const TextStyle(
-                              fontSize: 19,
-                              color: Pallete.whiteColor,
-                            ),
-                            decoration: const InputDecoration(
-                              hintText: "What's happening?",
-                              hintStyle: TextStyle(
-                                color: Pallete.greyColor,
-                                fontSize: 19,
-                                fontWeight: FontWeight.w600,
+                        Row(
+                          children: [
+                            Padding(
+                              padding: const EdgeInsets.only(
+                                  left: 15.0), // Add padding to move it right
+                              child: CircleAvatar(
+                                backgroundImage:
+                                    NetworkImage(currentUser.profilePic),
+                                radius: 25,
                               ),
-                              border: InputBorder.none,
                             ),
-                            maxLines: null,
-                          ),
+                            const SizedBox(width: 35),
+                            Expanded(
+                              child: TextField(
+                                controller: tweetTextController,
+                                style: const TextStyle(
+                                  fontSize: 19,
+                                  color: Pallete.whiteColor,
+                                ),
+                                decoration: const InputDecoration(
+                                  hintText: "What's happening?",
+                                  hintStyle: TextStyle(
+                                    color: Pallete.greyColor,
+                                    fontSize: 19,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                  border: InputBorder.none,
+                                ),
+                                maxLines: null,
+                              ),
+                            ),
+                          ],
                         ),
+                        if (images.isNotEmpty)
+                          carousel_slider.CarouselSlider(
+                            items: images.map((file) {
+                              return Container(
+                                width: MediaQuery.of(context).size.width,
+                                margin:
+                                    const EdgeInsets.symmetric(horizontal: 5),
+                                child: Image.file(file),
+                              );
+                            }).toList(),
+                            options: carousel_slider.CarouselOptions(
+                                height: 400, enableInfiniteScroll: false),
+                          ),
                       ],
                     ),
-                    if (images.isNotEmpty)
-                      carousel_slider.CarouselSlider(
-                        items: images.map((file) {
-                          return Container(
-                            width: MediaQuery.of(context).size.width,
-                            margin: const EdgeInsets.symmetric(horizontal: 5),
-                            child: Image.file(file),
-                          );
-                        }).toList(),
-                        options: carousel_slider.CarouselOptions(
-                            height: 400, enableInfiniteScroll: false),
-                      ),
-                  ],
-                ),
-              ),
+                  ),
+                );
+              },
             ),
       bottomNavigationBar: Container(
         padding: const EdgeInsets.only(bottom: 10),

@@ -15,5 +15,24 @@ class AssetsConstants {
   static const String likeFilledIcon = '$_svgsPath/like_filled.svg';
   static const String viewsIcon = '$_svgsPath/views.svg';
   static const String verifiedIcon = '$_svgsPath/verified.svg';
-  static const String Gold = '$_svgsPath/Gold.svg';
+  static const String Gold1 = '$_svgsPath/Gold1.svg';
+  static const String Iron1 = '$_svgsPath/Iron1.svg';
+  static const String Silver1 = '$_svgsPath/Silver1.svg';
+  static const String Platinium1 = '$_svgsPath/Platinium1.svg';
+  static const String Bronze1 = '$_svgsPath/Bronze1.svg';
+  static const String Gold2 = '$_svgsPath/Gold2.svg';
+  static const String Iron2 = '$_svgsPath/Iron2.svg';
+  static const String Silver2 = '$_svgsPath/Silver2.svg';
+  static const String Platinium2 = '$_svgsPath/Platinium2.svg';
+  static const String Bronze2 = '$_svgsPath/Bronze2.svg';
+  static const String Gold3 = '$_svgsPath/Gold3.svg';
+  static const String Iron3 = '$_svgsPath/Iron3.svg';
+  static const String Silver3 = '$_svgsPath/Silver3.svg';
+  static const String Platinium3 = '$_svgsPath/Platinium3.svg';
+  static const String Bronze3 = '$_svgsPath/Bronze3.svg';
+  static const String Gold4 = '$_svgsPath/Gold4.svg';
+  static const String Iron4 = '$_svgsPath/Iron4.svg';
+  static const String Silver4 = '$_svgsPath/Silver4.svg';
+  static const String Platinium4 = '$_svgsPath/Platinium4.svg';
+  static const String Bronze4 = '$_svgsPath/Bronze4.svg';
 }
