@@ -33,49 +33,54 @@ class _HomeViewState extends State<HomeView> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: _page == 0 ?  appBar : null,
+      appBar: _page == 0 ? appBar : null,
       body: IndexedStack(
         index: _page,
         children: UIContants.bottomTabBarPages,
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: onCreateTweet,
-        shape: const CircleBorder(),
         child: const Icon(
           Icons.add,
           color: Pallete.whiteColor,
           size: 28,
         ),
       ),
-      drawer: const SideDrawer() ,
+      drawer: const SideDrawer(),
       bottomNavigationBar: CupertinoTabBar(
         currentIndex: _page,
         onTap: onPageChange,
         backgroundColor: Pallete.backgroundColor,
         items: [
-          //home
           BottomNavigationBarItem(
             icon: SvgPicture.asset(
               _page == 0
                   ? AssetsConstants.homeFilledIcon
                   : AssetsConstants.homeOutlinedIcon,
-              color: Pallete.whiteColor,
+              colorFilter: const ColorFilter.mode(
+                Pallete.whiteColor,
+                BlendMode.srcIn,
+              ),
             ),
           ),
-          //search
           BottomNavigationBarItem(
             icon: SvgPicture.asset(
               AssetsConstants.searchIcon,
-              color: Pallete.whiteColor,
+              colorFilter: const ColorFilter.mode(
+                Pallete.whiteColor,
+                BlendMode.srcIn,
+              ),
             ),
           ),
-          //notification
           BottomNavigationBarItem(
             icon: SvgPicture.asset(
               _page == 2
                   ? AssetsConstants.notifFilledIcon
                   : AssetsConstants.notifOutlinedIcon,
-              color: Pallete.whiteColor,
+              colorFilter: const ColorFilter.mode(
+                Pallete.whiteColor,
+                BlendMode.srcIn,
+              ),
             ),
           ),
         ],

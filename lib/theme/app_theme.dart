@@ -11,5 +11,13 @@ class AppTheme {
     floatingActionButtonTheme: const FloatingActionButtonThemeData(
       backgroundColor: Pallete.blueColor,
     ),
+    drawerTheme: const DrawerThemeData(
+      backgroundColor: Pallete.backgroundColor,
+    ),
+    dialogBackgroundColor: Pallete.backgroundColor,
+    cardColor: Pallete.backgroundColor,
+    textSelectionTheme: const TextSelectionThemeData(
+      cursorColor: Pallete.blueColor,
+    ),
   );
 }
