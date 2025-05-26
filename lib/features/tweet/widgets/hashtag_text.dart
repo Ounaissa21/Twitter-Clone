@@ -1,6 +1,7 @@
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:twitter_clone/features/tweet/views/hashtag_view.dart';
+// Make sure that the HashtagView class exists in the imported file and is exported properly.
 import 'package:twitter_clone/theme/pallete.dart';
 
 class HashtagText extends StatelessWidget {

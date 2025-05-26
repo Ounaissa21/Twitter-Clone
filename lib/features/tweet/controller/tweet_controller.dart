@@ -70,11 +70,11 @@ final botUserProvider = FutureProvider<UserModel>((ref) async {
   // return UserModel.fromMap(botUserDoc.data);
 
   return const UserModel(
-    email: 'healthbot@example.com',
-    name: 'HealthBot',
+    email: 'healthadviser@gmail.com',
+    name: 'Health advisor',
     profilePic:
-        'https://placehold.co/100x100/000000/FFFFFF?text=BOT', // Placeholder image for the bot
-    bannerPic: 'https://placehold.co/300x150/000000/FFFFFF?text=BOT_BANNER',
+        'https://cdn.discordapp.com/attachments/1228445946900381720/1376418121413431326/healthbotpfp.PNG?ex=683540c4&is=6833ef44&hm=008c8e022687ba02e4b00deb52143fe3ec23fb75f502bb69f5da6a5a0b5348e1&', // Placeholder image for the bot
+    bannerPic: '',
     uid:
         '683222f400388f832b44', // <<< IMPORTANT: REPLACE THIS WITH YOUR BOT'S ACTUAL UID FROM APPWRITE
     bio: 'I provide helpful messages about healthy tweets.',
@@ -146,7 +146,11 @@ class TweetController extends StateNotifier<bool> {
 
     final res = await _tweetAPI.updateReshareCount(tweet);
     res.fold(
-      (l) => showSnackBar(context, l.message),
+      (l) {
+        if (context.mounted) { // Add this check
+          showSnackBar(context, l.message);
+        }
+      },
       (r) async {
         tweet = tweet.copyWith(
           id: ID.unique(),
@@ -155,7 +159,11 @@ class TweetController extends StateNotifier<bool> {
         );
         final res2 = await _tweetAPI.shareTweet(tweet);
         res2.fold(
-          (l) => showSnackBar(context, l.message),
+          (l) {
+            if (context.mounted) { // Add this check
+              showSnackBar(context, l.message);
+            }
+          },
           (r) {
             _notificationController.createNotification(
               text: '${currentUser.name} reshared your tweet!',
@@ -163,7 +171,9 @@ class TweetController extends StateNotifier<bool> {
               notificationType: NotificationType.retweet,
               uid: tweet.uid,
             );
-            showSnackBar(context, 'Retweeted!');
+            if (context.mounted) { // Add this check
+              showSnackBar(context, 'Retweeted!');
+            }
           },
         );
       },
@@ -191,7 +201,9 @@ class TweetController extends StateNotifier<bool> {
     required String repliedToUserId,
   }) {
     if (text.isEmpty) {
-      showSnackBar(context, 'Please enter text');
+      if (context.mounted) { // Add this check
+        showSnackBar(context, 'Please enter text');
+      }
       return;
     }
 
@@ -284,7 +296,11 @@ class TweetController extends StateNotifier<bool> {
     // Share the tweet to Appwrite
     final res = await _tweetAPI.shareTweet(tweet);
 
-    res.fold((l) => showSnackBar(context, l.message), (r) async {
+    res.fold((l) {
+      if (context.mounted) { // Add this check
+        showSnackBar(context, l.message);
+      }
+    }, (r) async {
       // If it's a reply, create a notification for the replied-to user
       if (repliedToUserId.isNotEmpty) {
         _notificationController.createNotification(
@@ -368,7 +384,7 @@ class TweetController extends StateNotifier<bool> {
       );
 
       if (response.statusCode == 200) {
-        final Map<String, dynamic> data = jsonDecode(response.body);
+        final data = jsonDecode(utf8.decode(response.bodyBytes));
         category = data['category'];
         // Only get persuasive message if the category is 'Unhealthy'
         if (category.toLowerCase() == 'unhealthy') {
@@ -412,7 +428,11 @@ class TweetController extends StateNotifier<bool> {
     // Share the tweet to Appwrite
     final res = await _tweetAPI.shareTweet(tweet);
 
-    res.fold((l) => showSnackBar(context, l.message), (r) async {
+    res.fold((l) {
+      if (context.mounted) { // Add this check
+        showSnackBar(context, l.message);
+      }
+    }, (r) async {
       // If it's a reply, create a notification for the replied-to user
       if (repliedToUserId.isNotEmpty) {
         _notificationController.createNotification(

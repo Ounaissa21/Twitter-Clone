@@ -1,8 +1,5 @@
 import 'dart:io';
 import 'package:carousel_slider/carousel_slider.dart' as carousel_slider;
-// ignore: unused_import
-import 'package:carousel_slider/carousel_controller.dart'
-    as carousel_controller;
 import 'package:flutter/material.dart' hide CarouselController;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_svg/svg.dart';
@@ -27,6 +24,7 @@ class CreateTweetScreen extends ConsumerStatefulWidget {
 class _CreateTweetScreenState extends ConsumerState<CreateTweetScreen> {
   final tweetTextController = TextEditingController();
   List<File> images = [];
+  bool get canTweet => tweetTextController.text.trim().isNotEmpty || images.isNotEmpty;
 
   @override
   void dispose() {
@@ -49,37 +47,52 @@ class _CreateTweetScreenState extends ConsumerState<CreateTweetScreen> {
     images = await pickImages();
     setState(() {});
   }
-  //void onPickImages() async {
-  // try {
-  //  final pickedImages = await pickImages();
-  //  if (pickedImages != null) {
-  //   setState(() {
-  //     images = pickedImages;
-  //  });
-  // }
-  // } catch (e) {
-  //  showSnackBar(context, 'Failed to pick images: $e');
-  // }
-  // }
+
+  void removeImage(int index) {
+    setState(() {
+      images.removeAt(index);
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
-    //final currentUser = ref.watch(currentUserDetailsProvider).value;
     final isLoading = ref.watch(tweetControllerProvider);
+    
     return Scaffold(
+      backgroundColor: Colors.black,
       appBar: AppBar(
+        backgroundColor: Colors.black,
+        elevation: 0,
         leading: IconButton(
-          onPressed: () {
-            Navigator.pop(context);
-          },
-          icon: const Icon(Icons.close, size: 30),
+          onPressed: () => Navigator.pop(context),
+          icon: const Icon(
+            Icons.close,
+            color: Colors.white,
+            size: 24,
+          ),
         ),
         actions: [
-          RoundedSmallButton(
-            onTap: shareTweet,
-            label: 'Tweet',
-            backgroundColor: Pallete.blueColor,
-            textColor: Pallete.whiteColor,
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            child: ElevatedButton(
+              onPressed: canTweet ? shareTweet : null,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: canTweet ? Colors.blue : Colors.grey[700],
+                foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+                elevation: 0,
+              ),
+              child: const Text(
+                'Tweet',
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
           ),
         ],
       ),
@@ -93,91 +106,204 @@ class _CreateTweetScreenState extends ConsumerState<CreateTweetScreen> {
                 }
 
                 return SafeArea(
-                  child: SingleChildScrollView(
-                    child: Column(
-                      children: [
-                        Row(
+                  child: Column(
+                    children: [
+                      Expanded(
+                        child: SingleChildScrollView(
+                          child: Padding(
+                            padding: const EdgeInsets.all(16.0),
+                            child: Column(
+                              children: [
+                                Row(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    CircleAvatar(
+                                      backgroundImage: NetworkImage(currentUser.profilePic),
+                                      radius: 25,
+                                    ),
+                                    const SizedBox(width: 12),
+                                    Expanded(
+                                      child: Column(
+                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                        children: [
+                                          TextField(
+                                            controller: tweetTextController,
+                                            style: const TextStyle(
+                                              fontSize: 20,
+                                              color: Colors.white,
+                                            ),
+                                            decoration: const InputDecoration(
+                                              hintText: "What's happening?",
+                                              hintStyle: TextStyle(
+                                                color: Colors.grey,
+                                                fontSize: 20,
+                                              ),
+                                              border: InputBorder.none,
+                                            ),
+                                            maxLines: null,
+                                            onChanged: (text) {
+                                              setState(() {});
+                                            },
+                                          ),
+                                          if (images.isNotEmpty) ...[
+                                            const SizedBox(height: 16),
+                                            if (images.length == 1)
+                                              Stack(
+                                                children: [
+                                                  ClipRRect(
+                                                    borderRadius: BorderRadius.circular(16),
+                                                    child: Image.file(
+                                                      images[0],
+                                                      width: double.infinity,
+                                                      height: 300,
+                                                      fit: BoxFit.cover,
+                                                    ),
+                                                  ),
+                                                  Positioned(
+                                                    top: 8,
+                                                    right: 8,
+                                                    child: GestureDetector(
+                                                      onTap: () => removeImage(0),
+                                                      child: Container(
+                                                        padding: const EdgeInsets.all(4),
+                                                        decoration: const BoxDecoration(
+                                                          color: Colors.black54,
+                                                          shape: BoxShape.circle,
+                                                        ),
+                                                        child: const Icon(
+                                                          Icons.close,
+                                                          color: Colors.white,
+                                                          size: 20,
+                                                        ),
+                                                      ),
+                                                    ),
+                                                  ),
+                                                ],
+                                              )
+                                            else
+                                              carousel_slider.CarouselSlider(
+                                                items: images.asMap().entries.map((entry) {
+                                                  int index = entry.key;
+                                                  File file = entry.value;
+                                                  return Stack(
+                                                    children: [
+                                                      Container(
+                                                        width: MediaQuery.of(context).size.width,
+                                                        margin: const EdgeInsets.symmetric(horizontal: 5),
+                                                        child: ClipRRect(
+                                                          borderRadius: BorderRadius.circular(16),
+                                                          child: Image.file(
+                                                            file,
+                                                            fit: BoxFit.cover,
+                                                          ),
+                                                        ),
+                                                      ),
+                                                      Positioned(
+                                                        top: 8,
+                                                        right: 13,
+                                                        child: GestureDetector(
+                                                          onTap: () => removeImage(index),
+                                                          child: Container(
+                                                            padding: const EdgeInsets.all(4),
+                                                            decoration: const BoxDecoration(
+                                                              color: Colors.black54,
+                                                              shape: BoxShape.circle,
+                                                            ),
+                                                            child: const Icon(
+                                                              Icons.close,
+                                                              color: Colors.white,
+                                                              size: 20,
+                                                            ),
+                                                          ),
+                                                        ),
+                                                      ),
+                                                    ],
+                                                  );
+                                                }).toList(),
+                                                options: carousel_slider.CarouselOptions(
+                                                  height: 300,
+                                                  enableInfiniteScroll: false,
+                                                  viewportFraction: 0.9,
+                                                ),
+                                              ),
+                                          ],
+                                        ],
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+                      // Bottom toolbar
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                        decoration: const BoxDecoration(
+                          border: Border(
+                            top: BorderSide(
+                              color: Colors.grey,
+                              width: 0.2,
+                            ),
+                          ),
+                        ),
+                        child: Row(
                           children: [
-                            Padding(
-                              padding: const EdgeInsets.only(
-                                  left: 15.0), // Add padding to move it right
-                              child: CircleAvatar(
-                                backgroundImage:
-                                    NetworkImage(currentUser.profilePic),
-                                radius: 25,
+                            IconButton(
+                              onPressed: onPickImages,
+                              icon: SvgPicture.asset(
+                                AssetsConstants.galleryIcon,
+                                color: Colors.blue,
+                                height: 24,
                               ),
                             ),
-                            const SizedBox(width: 35),
-                            Expanded(
-                              child: TextField(
-                                controller: tweetTextController,
-                                style: const TextStyle(
-                                  fontSize: 19,
-                                  color: Pallete.whiteColor,
+                            IconButton(
+                              onPressed: () {
+                                // GIF functionality can be added here
+                              },
+                              icon: SvgPicture.asset(
+                                AssetsConstants.gifIcon,
+                                color: Colors.blue,
+                                height: 24,
+                              ),
+                            ),
+                            IconButton(
+                              onPressed: () {
+                                // Emoji functionality can be added here
+                              },
+                              icon: SvgPicture.asset(
+                                AssetsConstants.emojiIcon,
+                                color: Colors.blue,
+                                height: 24,
+                              ),
+                            ),
+                            const Spacer(),
+                            if (tweetTextController.text.isNotEmpty)
+                              Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                                decoration: BoxDecoration(
+                                  color: Colors.grey[800],
+                                  borderRadius: BorderRadius.circular(12),
                                 ),
-                                decoration: const InputDecoration(
-                                  hintText: "What's happening?",
-                                  hintStyle: TextStyle(
-                                    color: Pallete.greyColor,
-                                    fontSize: 19,
-                                    fontWeight: FontWeight.w600,
+                                child: Text(
+                                  '${280 - tweetTextController.text.length}',
+                                  style: TextStyle(
+                                    color: tweetTextController.text.length > 280 
+                                        ? Colors.red 
+                                        : Colors.grey,
+                                    fontSize: 14,
                                   ),
-                                  border: InputBorder.none,
                                 ),
-                                maxLines: null,
                               ),
-                            ),
                           ],
                         ),
-                        if (images.isNotEmpty)
-                          carousel_slider.CarouselSlider(
-                            items: images.map((file) {
-                              return Container(
-                                width: MediaQuery.of(context).size.width,
-                                margin:
-                                    const EdgeInsets.symmetric(horizontal: 5),
-                                child: Image.file(file),
-                              );
-                            }).toList(),
-                            options: carousel_slider.CarouselOptions(
-                                height: 400, enableInfiniteScroll: false),
-                          ),
-                      ],
-                    ),
+                      ),
+                    ],
                   ),
                 );
               },
             ),
-      bottomNavigationBar: Container(
-        padding: const EdgeInsets.only(bottom: 10),
-        decoration: const BoxDecoration(
-          border: Border(
-            top: BorderSide(
-              color: Pallete.greyColor,
-              width: 0.3,
-            ),
-          ),
-        ),
-        child: Row(
-          children: [
-            Padding(
-              padding: const EdgeInsets.all(8.0).copyWith(left: 15, right: 15),
-              child: GestureDetector(
-                onTap: onPickImages,
-                child: SvgPicture.asset(AssetsConstants.galleryIcon),
-              ),
-            ),
-            Padding(
-              padding: const EdgeInsets.all(8.0).copyWith(left: 15, right: 15),
-              child: SvgPicture.asset(AssetsConstants.gifIcon),
-            ),
-            Padding(
-              padding: const EdgeInsets.all(8.0).copyWith(left: 15, right: 15),
-              child: SvgPicture.asset(AssetsConstants.emojiIcon),
-            ),
-          ],
-        ),
-      ),
     );
   }
 }

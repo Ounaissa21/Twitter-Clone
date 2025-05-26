@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:twitter_clone/theme/pallete.dart';
 
 class FollowCount extends StatelessWidget {
   final int count;
@@ -13,30 +12,40 @@ class FollowCount extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    double fontSize = 18;
-
-    return Row(
-      children: [
-        Text(
-          '$count',
-          style: TextStyle(
-            fontSize: fontSize,
-            fontWeight: FontWeight.bold,
-            color: Pallete.whiteColor,
-          ),
+    return GestureDetector(
+      onTap: () {
+        // Navigate to followers/following list
+      },
+      child: RichText(
+        text: TextSpan(
+          children: [
+            TextSpan(
+              text: _formatCount(count),
+              style: const TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+                color: Colors.white,
+              ),
+            ),
+            TextSpan(
+              text: text,
+              style: const TextStyle(
+                fontSize: 16,
+                color: Colors.grey,
+              ),
+            ),
+          ],
         ),
-        const SizedBox(
-          width: 3,
-        ),
-        Text(
-          text,
-          style: TextStyle(
-            fontSize: fontSize,
-            fontWeight: FontWeight.bold,
-            color: Pallete.greyColor,
-          ),
-        )
-      ],
+      ),
     );
+  }
+
+  String _formatCount(int count) {
+    if (count >= 1000000) {
+      return '${(count / 1000000).toStringAsFixed(1)}M';
+    } else if (count >= 1000) {
+      return '${(count / 1000).toStringAsFixed(1)}K';
+    }
+    return count.toString();
   }
 }
