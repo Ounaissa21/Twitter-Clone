@@ -237,68 +237,6 @@ class _CreateTweetScreenState extends ConsumerState<CreateTweetScreen> {
                           ),
                         ),
                       ),
-                      // Bottom toolbar
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                        decoration: const BoxDecoration(
-                          border: Border(
-                            top: BorderSide(
-                              color: Colors.grey,
-                              width: 0.2,
-                            ),
-                          ),
-                        ),
-                        child: Row(
-                          children: [
-                            IconButton(
-                              onPressed: onPickImages,
-                              icon: SvgPicture.asset(
-                                AssetsConstants.galleryIcon,
-                                color: Colors.blue,
-                                height: 24,
-                              ),
-                            ),
-                            IconButton(
-                              onPressed: () {
-                                // GIF functionality can be added here
-                              },
-                              icon: SvgPicture.asset(
-                                AssetsConstants.gifIcon,
-                                color: Colors.blue,
-                                height: 24,
-                              ),
-                            ),
-                            IconButton(
-                              onPressed: () {
-                                // Emoji functionality can be added here
-                              },
-                              icon: SvgPicture.asset(
-                                AssetsConstants.emojiIcon,
-                                color: Colors.blue,
-                                height: 24,
-                              ),
-                            ),
-                            const Spacer(),
-                            if (tweetTextController.text.isNotEmpty)
-                              Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-                                decoration: BoxDecoration(
-                                  color: Colors.grey[800],
-                                  borderRadius: BorderRadius.circular(12),
-                                ),
-                                child: Text(
-                                  '${280 - tweetTextController.text.length}',
-                                  style: TextStyle(
-                                    color: tweetTextController.text.length > 280 
-                                        ? Colors.red 
-                                        : Colors.grey,
-                                    fontSize: 14,
-                                  ),
-                                ),
-                              ),
-                          ],
-                        ),
-                      ),
                     ],
                   ),
                 );

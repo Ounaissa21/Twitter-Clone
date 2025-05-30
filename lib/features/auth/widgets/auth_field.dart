@@ -46,8 +46,8 @@ class _TwitterAuthFieldState extends State<TwitterAuthField> {
           ),
           border: InputBorder.none,
           contentPadding: const EdgeInsets.symmetric(
-            horizontal: 16,
-            vertical: 12,
+            horizontal: 12,
+            vertical: 10,
           ),
           suffixIcon: widget.isPassword
               ? IconButton(

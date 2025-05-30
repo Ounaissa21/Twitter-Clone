@@ -6,7 +6,6 @@ class Tweet {
   final String text;
   final List<String> hashtags;
   final String link;
-  final List<String> imageLinks;
   final String uid;
   final TweetType tweetType;
   final DateTime tweetedAt;
@@ -23,7 +22,6 @@ class Tweet {
     required this.text,
     required this.hashtags,
     required this.link,
-    required this.imageLinks,
     required this.uid,
     required this.tweetType,
     required this.tweetedAt,
@@ -41,7 +39,6 @@ class Tweet {
     String? text,
     List<String>? hashtags,
     String? link,
-    List<String>? imageLinks,
     String? uid,
     TweetType? tweetType,
     DateTime? tweetedAt,
@@ -58,7 +55,6 @@ class Tweet {
       text: text ?? this.text,
       hashtags: hashtags ?? this.hashtags,
       link: link ?? this.link,
-      imageLinks: imageLinks ?? this.imageLinks,
       uid: uid ?? this.uid,
       tweetType: tweetType ?? this.tweetType,
       tweetedAt: tweetedAt ?? this.tweetedAt,
@@ -79,7 +75,6 @@ class Tweet {
     result.addAll({'text': text});
     result.addAll({'hashtags': hashtags});
     result.addAll({'link': link});
-    result.addAll({'imageLinks': imageLinks});
     result.addAll({'uid': uid});
     result.addAll({'tweetType': tweetType.type});
     result.addAll({'tweetedAt': tweetedAt.millisecondsSinceEpoch});
@@ -99,7 +94,6 @@ class Tweet {
       text: map['text'] ?? '',
       hashtags: List<String>.from(map['hashtags']),
       link: map['link'] ?? '',
-      imageLinks: List<String>.from(map['imageLinks']),
       uid: map['uid'] ?? '',
       tweetType: (map['tweetType'] as String).toTweetTypeEnum(),
       tweetedAt: DateTime.fromMillisecondsSinceEpoch(map['tweetedAt']),
@@ -116,7 +110,7 @@ class Tweet {
 
   @override
   String toString() {
-    return 'Tweet(text: $text, hashtags: $hashtags, link: $link, imageLinks: $imageLinks, uid: $uid, tweetType: $tweetType, tweetedAt: $tweetedAt, likes: $likes, commentIds: $commentIds, id: $id, reshareCount: $reshareCount, retweetedBy: $retweetedBy, repliedTo: $repliedTo, category: $category, persuasiveMessage: $persuasiveMessage)';
+    return 'Tweet(text: $text, hashtags: $hashtags, link: $link, uid: $uid, tweetType: $tweetType, tweetedAt: $tweetedAt, likes: $likes, commentIds: $commentIds, id: $id, reshareCount: $reshareCount, retweetedBy: $retweetedBy, repliedTo: $repliedTo, category: $category, persuasiveMessage: $persuasiveMessage)';
   }
 
   @override
@@ -127,7 +121,6 @@ class Tweet {
         other.text == text &&
         listEquals(other.hashtags, hashtags) &&
         other.link == link &&
-        listEquals(other.imageLinks, imageLinks) &&
         other.uid == uid &&
         other.tweetType == tweetType &&
         other.tweetedAt == tweetedAt &&
@@ -146,7 +139,6 @@ class Tweet {
     return text.hashCode ^
         hashtags.hashCode ^
         link.hashCode ^
-        imageLinks.hashCode ^
         uid.hashCode ^
         tweetType.hashCode ^
         tweetedAt.hashCode ^

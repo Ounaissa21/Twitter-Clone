@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:twitter_clone/common/loading_page.dart';
-import 'package:twitter_clone/common/rounded_small_button.dart';
+// import 'package:twitter_clone/common/rounded_small_button.dart'; // Not used in the provided snippet
 import 'package:twitter_clone/constants/contants.dart';
 import 'package:twitter_clone/features/auth/controller/auth_controller.dart';
 import 'package:twitter_clone/features/auth/view/signup_view.dart';
@@ -47,51 +47,56 @@ class _LoginViewState extends ConsumerState<LoginView> {
     
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+      // 1. Ensure resizeToAvoidBottomInset is true (default) or remove the line
+      // resizeToAvoidBottomInset: true, // Or remove this line entirely
       body: isLoading
           ? const Loader()
           : SafeArea(
               child: Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 32.0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const SizedBox(height: 40),
-                    // Back button and logo
-                    Row(
-                      children: [
-                        IconButton(
-                          onPressed: () => Navigator.pop(context),
-                          icon: Icon(
-                            Icons.close,
-                            color: Theme.of(context).iconTheme.color,
-                            size: 24,
-                          ),
-                        ),
-                        const Spacer(),
-                        SvgPicture.asset(
-                          AssetsConstants.twitterLogo,
-                          height: 30,
-                          color: Pallete.blueColor,
-                        ),
-                        const Spacer(),
-                        const SizedBox(width: 48), // Balance the close button
-                      ],
+                child: SingleChildScrollView(
+                  child: ConstrainedBox(
+                    constraints: BoxConstraints(
+                      minHeight: MediaQuery.of(context).size.height - 
+                          MediaQuery.of(context).padding.top - 
+                          MediaQuery.of(context).padding.bottom,
                     ),
-                    const SizedBox(height: 40),
-                    // Main heading
-                    Text(
-                      'Sign in to Twitter',
-                      style: TextStyle(
-                        color: Theme.of(context).textTheme.bodyLarge?.color,
-                        fontSize: 32,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    const SizedBox(height: 40),
-                    // Form fields
-                    Expanded(
+                    child: IntrinsicHeight(
                       child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
+                          const SizedBox(height: 40),
+                          Row(
+                            children: [
+                              IconButton(
+                                onPressed: () => Navigator.pop(context),
+                                icon: Icon(
+                                  Icons.close,
+                                  color: Theme.of(context).iconTheme.color,
+                                  size: 24,
+                                ),
+                              ),
+                              const Spacer(),
+                              SvgPicture.asset(
+                                AssetsConstants.twitterLogo,
+                                height: 30,
+                                color: Pallete.blueColor, // Ensure Pallete.blueColor is defined
+                              ),
+                              const Spacer(),
+                              const SizedBox(width: 48), 
+                            ],
+                          ),
+                          const SizedBox(height: 40),
+                          Text(
+                            'Sign in to Twitter',
+                            style: TextStyle(
+                              color: Theme.of(context).textTheme.bodyLarge?.color,
+                              fontSize: 32,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          const SizedBox(height: 40),
+                          // 3. Flattened form fields
                           TwitterAuthField(
                             controller: emailController,
                             hintText: 'Phone, email, or username',
@@ -103,7 +108,6 @@ class _LoginViewState extends ConsumerState<LoginView> {
                             isPassword: true,
                           ),
                           const SizedBox(height: 40),
-                          // Login button
                           SizedBox(
                             width: double.infinity,
                             height: 50,
@@ -127,29 +131,16 @@ class _LoginViewState extends ConsumerState<LoginView> {
                             ),
                           ),
                           const SizedBox(height: 20),
-                          // Forgot password
-                          TextButton(
-                            onPressed: () {
-                              // Add forgot password functionality if needed
-                            },
-                            child: Text(
-                              'Forgot password?',
-                              style: TextStyle(
-                                color: Theme.of(context).textTheme.bodyLarge?.color,
-                                fontSize: 16,
-                              ),
-                            ),
-                          ),
-                          const Spacer(),
-                          // Sign up link
+                          // 2. Use Spacer instead of fixed SizedBox for flexible spacing
+                          const Spacer(), 
                           Padding(
-                            padding: const EdgeInsets.only(bottom: 40),
+                            padding: const EdgeInsets.fromLTRB(50, 0, 0, 40),
                             child: RichText(
                               text: TextSpan(
                                 text: "Don't have an account? ",
                                 style: TextStyle(
                                   fontSize: 16,
-                                  color: Pallete.getSecondaryTextColor(isDarkMode),
+                                  color: Pallete.getSecondaryTextColor(isDarkMode), // Ensure Pallete.getSecondaryTextColor is defined
                                 ),
                                 children: [
                                   TextSpan(
@@ -174,7 +165,7 @@ class _LoginViewState extends ConsumerState<LoginView> {
                         ],
                       ),
                     ),
-                  ],
+                  ),
                 ),
               ),
             ),

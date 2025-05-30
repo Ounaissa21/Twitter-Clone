@@ -69,6 +69,7 @@ class AuthController extends StateNotifier<bool> {
           uid: r.$id,
           bio: '',
           isTwitterBlue: false,
+          healthPoints: 0,
         );
         final res2 = await _userAPI.saveUserData(usermodel);
         res2.fold((l) => showSnackBar(context, l.message), (r) {

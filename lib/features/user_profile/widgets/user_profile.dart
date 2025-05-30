@@ -494,7 +494,6 @@ class _UserProfileState extends ConsumerState<UserProfile>
                       tabs: const [
                         Tab(text: 'Tweets'),
                         Tab(text: 'Replies'),
-                        Tab(text: 'Media'),
                       ],
                     ),
                   ),
@@ -508,8 +507,6 @@ class _UserProfileState extends ConsumerState<UserProfile>
                 _buildTweetsList(),
                 // Replies Tab
                 _buildRepliesList(),
-                // Media Tab
-                _buildMediaList(),
               ],
             ),
           );
@@ -603,28 +600,7 @@ class _UserProfileState extends ConsumerState<UserProfile>
     );
   }
 
-  Widget _buildMediaList() {
-    // Filter tweets that have images
-    return ref.watch(getUserTweetsProvider(widget.user.uid)).when(
-      data: (tweets) {
-        final mediaTweets = tweets.where((tweet) => tweet.imageLinks.isNotEmpty).toList();
-        
-        if (mediaTweets.isEmpty) {
-          return _buildEmptyState('No media yet');
-        }
-
-        return ListView.builder(
-          itemCount: mediaTweets.length,
-          itemBuilder: (BuildContext context, int index) {
-            final tweet = mediaTweets[index];
-            return TweetCard(tweet: tweet);
-          },
-        );
-      },
-      error: (error, st) => ErrorText(error: error.toString()),
-      loading: () => const Loader(),
-    );
-  }
+  
 
   Widget _buildEmptyState(String message) {
     return Center(

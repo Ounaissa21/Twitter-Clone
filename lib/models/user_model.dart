@@ -25,7 +25,7 @@ class UserModel {
     required this.uid,
     required this.bio,
     required this.isTwitterBlue,
-    this.healthPoints = 0, // Default to 0 points
+    required this.healthPoints, // Default to 0 points
   });
 
   UserModel copyWith({
@@ -125,6 +125,6 @@ class UserModel {
         uid.hashCode ^
         bio.hashCode ^
         isTwitterBlue.hashCode;
-    healthPoints.hashCode;
+        healthPoints.hashCode;
   }
 }

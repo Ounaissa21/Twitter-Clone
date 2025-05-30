@@ -2,13 +2,13 @@ import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_svg/svg.dart';
-import 'package:twitter_clone/common/common.dart';
+// import 'package:twitter_clone/common/common.dart'; // Not used in the provided snippet
 import 'package:twitter_clone/common/loading_page.dart';
 import 'package:twitter_clone/constants/contants.dart';
 import 'package:twitter_clone/features/auth/controller/auth_controller.dart';
 import 'package:twitter_clone/features/auth/view/login_view.dart';
 import 'package:twitter_clone/features/auth/widgets/auth_field.dart';
-import 'package:twitter_clone/theme/theme.dart';
+import 'package:twitter_clone/theme/pallete.dart'; // Added for Pallete.blueColor and Pallete.getSecondaryTextColor
 import 'package:twitter_clone/theme/theme_controller.dart';
 
 class SignupView extends ConsumerStatefulWidget {
@@ -48,38 +48,44 @@ class _SignupViewState extends ConsumerState<SignupView> {
 
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+      // 1. Ensure resizeToAvoidBottomInset is true (default)
+      // resizeToAvoidBottomInset: true, // Or remove this line entirely
       body: isLoading
           ? const Loader()
           : SafeArea(
               child: Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 32.0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const SizedBox(height: 40),
-                    // Twitter logo without background
-                    Center(
-                      child: SvgPicture.asset(
-                        AssetsConstants.twitterLogo,
-                        height: 50,
-                        color: Pallete.blueColor,
-                      ),
+                // 2. Wrap content with SingleChildScrollView, ConstrainedBox, and IntrinsicHeight
+                child: SingleChildScrollView(
+                  child: ConstrainedBox(
+                    constraints: BoxConstraints(
+                      minHeight: MediaQuery.of(context).size.height -
+                          MediaQuery.of(context).padding.top -
+                          MediaQuery.of(context).padding.bottom,
                     ),
-                    const SizedBox(height: 60),
-                    // Main heading
-                    Text(
-                      'Create your account',
-                      style: TextStyle(
-                        color: Theme.of(context).textTheme.bodyLarge?.color,
-                        fontSize: 32,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    const SizedBox(height: 40),
-                    // Form fields
-                    Expanded(
+                    child: IntrinsicHeight(
                       child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
+                          const SizedBox(height: 40),
+                          Center(
+                            child: SvgPicture.asset(
+                              AssetsConstants.twitterLogo,
+                              height: 50,
+                              color: Pallete.blueColor, // Ensure Pallete.blueColor is defined
+                            ),
+                          ),
+                          const SizedBox(height: 60),
+                          Text(
+                            'Create your account',
+                            style: TextStyle(
+                              color: Theme.of(context).textTheme.bodyLarge?.color,
+                              fontSize: 32,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          const SizedBox(height: 40),
+                          // 3. Removed Expanded and inner Column, form fields are direct children
                           TwitterAuthField(
                             controller: emailController,
                             hintText: 'Email',
@@ -91,7 +97,6 @@ class _SignupViewState extends ConsumerState<SignupView> {
                             isPassword: true,
                           ),
                           const SizedBox(height: 40),
-                          // Sign up button
                           SizedBox(
                             width: double.infinity,
                             height: 50,
@@ -114,16 +119,16 @@ class _SignupViewState extends ConsumerState<SignupView> {
                               ),
                             ),
                           ),
-                          const Spacer(),
-                          // Login link
+                          // 4. Use Spacer to push the login link to the bottom
+                          const Spacer(), 
                           Padding(
-                            padding: const EdgeInsets.only(bottom: 40),
+                            padding: const EdgeInsets.fromLTRB(50, 0, 0, 40),
                             child: RichText(
                               text: TextSpan(
                                 text: "Have an account already? ",
                                 style: TextStyle(
                                   fontSize: 16,
-                                  color: Pallete.getSecondaryTextColor(isDarkMode),
+                                  color: Pallete.getSecondaryTextColor(isDarkMode), // Ensure Pallete.getSecondaryTextColor is defined
                                 ),
                                 children: [
                                   TextSpan(
@@ -148,7 +153,7 @@ class _SignupViewState extends ConsumerState<SignupView> {
                         ],
                       ),
                     ),
-                  ],
+                  ),
                 ),
               ),
             ),

@@ -82,15 +82,6 @@ class TwitterNotificationTile extends ConsumerWidget {
                   ],
                 ),
               ),
-              
-              // Optional: User avatar for certain notification types
-              // if (_shouldShowAvatar())
-              //   CircleAvatar(
-              //     radius: 20,
-              //     backgroundImage: NetworkImage(
-              //       notification.user.profilePic ,
-              //     ),
-              //   ),
             ],
           ),
         ),

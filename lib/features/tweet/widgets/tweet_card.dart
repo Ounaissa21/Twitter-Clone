@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:like_button/like_button.dart';
 import 'package:twitter_clone/common/error_page.dart';
@@ -36,9 +38,23 @@ class TweetCard extends ConsumerStatefulWidget {
 class _TweetCardState extends ConsumerState<TweetCard> {
   int currentRating = 0;
 
-  @override
   Widget build(BuildContext context) {
-    final currentUser = ref.watch(currentUserDetailsProvider).value;
+  final currentUserAsync = ref.watch(currentUserDetailsProvider);
+
+  // Handle loading and error states
+  if (currentUserAsync.isLoading) {
+    return const Loader();
+  }
+  if (currentUserAsync.hasError) {
+    return ErrorText(error: currentUserAsync.error.toString());
+  }
+
+  final currentUser = currentUserAsync.value;
+  if (currentUser == null) {
+    return const Loader();
+  }
+      
+        
     final currentTheme = ref.watch(themeModeProvider);
     final isDarkMode = currentTheme == ThemeMode.dark;
 
@@ -47,17 +63,71 @@ class _TweetCardState extends ConsumerState<TweetCard> {
     return currentUser == null
         ? const Loader()
         : ref.watch(userDetailsProvider(widget.tweet.uid)).when(
-              data: (user) {
-                final bool isBotTweet = botUserAsyncValue.when(
+              data: (user) { // user here is the author of widget.tweet (the tweet this card is displaying)
+                final bool isCurrentTweetByBot = botUserAsyncValue.when(
                   data: (botUser) => widget.tweet.uid == botUser.uid,
                   loading: () => false,
                   error: (err, stack) => false,
                 );
 
+                // Helper widget to build the star rating system
+                Widget buildStarRatingSystem({required bool interactionAllowed}) {
+                  return Padding(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 16.0, vertical: 4.0),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.end,
+                      children: [
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.end,
+                          children: List.generate(5, (index) {
+                            final starNumber = index + 1;
+                            final isStarFilled = starNumber <= currentRating;
+
+                            return GestureDetector(
+                              onTap: interactionAllowed
+                                  ? () {
+                                      setState(() {
+                                        currentRating = starNumber;
+                                      });
+                                    }
+                                  : null, // Disable interaction if not allowed
+                              child: Padding(
+                                padding: const EdgeInsets.only(right: 8.0),
+                                child: Icon(
+                                  Icons.star_rounded,
+                                  color: isStarFilled
+                                      ? Pallete.yellowColor
+                                      : Pallete.getSecondaryTextColor(
+                                          isDarkMode),
+                                  size: 20,
+                                ),
+                              ),
+                            );
+                          }),
+                        ),
+                        if (currentRating > 0)
+                          Padding(
+                            padding: const EdgeInsets.only(top: 4.0),
+                            child: Text(
+                              'Rated $currentRating star${currentRating == 1 ? '' : 's'}',
+                              style: TextStyle(
+                                color:
+                                    Pallete.getSecondaryTextColor(isDarkMode),
+                                fontSize: 13,
+                              ),
+                            ),
+                          ),
+                      ],
+                    ),
+                  );
+                }
+
                 return GestureDetector(
                   onTap: () {
                     if (!widget.isReplyInThread) {
-                       Navigator.push(context, TwitterReplyScreen.route(widget.tweet));
+                      Navigator.push(
+                          context, TwitterReplyScreen.route(widget.tweet));
                     }
                   },
                   child: Container(
@@ -75,21 +145,25 @@ class _TweetCardState extends ConsumerState<TweetCard> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          if (widget.tweet.retweetedBy.isNotEmpty && !widget.isReplyInThread)
+                          if (widget.tweet.retweetedBy.isNotEmpty &&
+                              !widget.isReplyInThread)
                             Padding(
-                              padding: const EdgeInsets.only(left: 40.0, bottom: 4.0, right: 16.0),
+                              padding: const EdgeInsets.only(
+                                  left: 40.0, bottom: 4.0, right: 16.0),
                               child: Row(
                                 children: [
                                   SvgPicture.asset(
                                     AssetsConstants.retweetIcon,
-                                    color: Pallete.getSecondaryTextColor(isDarkMode),
+                                    color: Pallete.getSecondaryTextColor(
+                                        isDarkMode),
                                     height: 16,
                                   ),
                                   const SizedBox(width: 8),
                                   Text(
                                     '${widget.tweet.retweetedBy} retweeted',
                                     style: TextStyle(
-                                      color: Pallete.getSecondaryTextColor(isDarkMode),
+                                      color: Pallete.getSecondaryTextColor(
+                                          isDarkMode),
                                       fontSize: 13,
                                       fontWeight: FontWeight.w400,
                                     ),
@@ -97,9 +171,9 @@ class _TweetCardState extends ConsumerState<TweetCard> {
                                 ],
                               ),
                             ),
-                          
                           Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                            padding:
+                                const EdgeInsets.symmetric(horizontal: 16.0),
                             child: Row(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
@@ -119,14 +193,17 @@ class _TweetCardState extends ConsumerState<TweetCard> {
                                           ),
                                         ),
                                         Padding(
-                                          padding: const EdgeInsets.only(top: 0),
+                                          padding:
+                                              const EdgeInsets.only(top: 0),
                                           child: GestureDetector(
                                             onTap: () {
-                                              Navigator.push(context, UserProfileView.route(user));
+                                              Navigator.push(context,
+                                                  UserProfileView.route(user));
                                             },
                                             child: CircleAvatar(
                                               radius: 18,
-                                              backgroundImage: NetworkImage(user.profilePic),
+                                              backgroundImage:
+                                                  NetworkImage(user.profilePic),
                                             ),
                                           ),
                                         ),
@@ -138,27 +215,32 @@ class _TweetCardState extends ConsumerState<TweetCard> {
                                     padding: const EdgeInsets.only(right: 12.0),
                                     child: GestureDetector(
                                       onTap: () {
-                                        Navigator.push(context, UserProfileView.route(user));
+                                        Navigator.push(context,
+                                            UserProfileView.route(user));
                                       },
                                       child: CircleAvatar(
                                         radius: 20,
-                                        backgroundImage: NetworkImage(user.profilePic),
+                                        backgroundImage:
+                                            NetworkImage(user.profilePic),
                                       ),
                                     ),
                                   ),
-                                
                                 Expanded(
                                   child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
                                     children: [
                                       Row(
                                         children: [
                                           Flexible(
                                             child: Text(
-      user.name,
-      style: TextStyle(
-        color: Theme.of(context).textTheme.bodyLarge?.color,
-        fontWeight: FontWeight.bold,
+                                              user.name,
+                                              style: TextStyle(
+                                                color: Theme.of(context)
+                                                    .textTheme
+                                                    .bodyLarge
+                                                    ?.color,
+                                                fontWeight: FontWeight.bold,
                                                 fontSize: 15,
                                               ),
                                               overflow: TextOverflow.ellipsis,
@@ -166,125 +248,148 @@ class _TweetCardState extends ConsumerState<TweetCard> {
                                           ),
                                           if (user.isTwitterBlue) ...[
                                             const SizedBox(width: 4),
-    if (user.isTwitterBlue)
-      SvgPicture.asset(
-        AssetsConstants.verifiedIcon,
-        height: 16,
-      ),
+                                            if (user.isTwitterBlue)
+                                              SvgPicture.asset(
+                                                AssetsConstants.verifiedIcon,
+                                                height: 16,
+                                              ),
                                           ],
-                                          if (!isBotTweet && !widget.isReplyInThread) ...[
+                                          if (!isCurrentTweetByBot && // Changed from isBotTweet
+                                              !widget.isReplyInThread) ...[
                                             const SizedBox(width: 4),
                                             SvgPicture.asset(
-                                              user.getBadgeAsset(),
+                                              user.getBadgeAsset(), // Assuming getBadgeAsset() exists on UserModel
                                               height: 18,
                                               width: 18,
                                             ),
                                           ],
                                           const SizedBox(width: 4),
-                                          
-                                             Text(
+                                          Expanded( // Wrap with Expanded to prevent overflow
+                                            child: Text(
                                               '@${user.name} · ${timeago.format(widget.tweet.tweetedAt, locale: 'en_short')}',
                                               style: TextStyle(
                                                 fontSize: 15,
-                                                color: Pallete.getSecondaryTextColor(isDarkMode),
+                                                color:
+                                                    Pallete.getSecondaryTextColor(
+                                                        isDarkMode),
                                                 fontWeight: FontWeight.w400,
                                               ),
                                               overflow: TextOverflow.ellipsis,
                                             ),
-                                          
-                                          const Spacer(),
+                                          ),
+                                          // const Spacer(), // Removed Spacer to allow Expanded to work correctly for the Text above
                                           GestureDetector(
                                             onTap: () {
                                               // Show more options
                                             },
                                             child: Icon(
                                               Icons.more_horiz,
-                                              color: Pallete.getSecondaryTextColor(isDarkMode),
+                                              color:
+                                                  Pallete.getSecondaryTextColor(
+                                                      isDarkMode),
                                               size: 20,
                                             ),
                                           ),
                                         ],
                                       ),
-                                      
                                       const SizedBox(height: 4),
-                                      
                                       if (widget.tweet.repliedTo.isNotEmpty)
                                         Padding(
-                                          padding: const EdgeInsets.only(bottom: 4.0),
-                                          child: ref.watch(getTweetByIdProvider(widget.tweet.repliedTo)).when(
+                                          padding: const EdgeInsets.only(
+                                              bottom: 4.0),
+                                          child: ref
+                                              .watch(getTweetByIdProvider(
+                                                  widget.tweet.repliedTo))
+                                              .when(
                                                 data: (repliedToTweet) {
-                                                  final replyingToUserAsyncValue = ref.watch(userDetailsProvider(repliedToTweet.uid));
-                                                  return replyingToUserAsyncValue.when(
-                                                    data: (replyingToUser) => RichText(
+                                                  final replyingToUserAsyncValue =
+                                                      ref.watch(
+                                                          userDetailsProvider(
+                                                              repliedToTweet
+                                                                  .uid));
+                                                  return replyingToUserAsyncValue
+                                                      .when(
+                                                    data: (replyingToUser) =>
+                                                        RichText(
                                                       text: TextSpan(
                                                         text: 'Replying to ',
                                                         style: TextStyle(
-                                                          color: Pallete.getSecondaryTextColor(isDarkMode),
+                                                          color: Pallete
+                                                              .getSecondaryTextColor(
+                                                                  isDarkMode),
                                                           fontSize: 15,
                                                         ),
                                                         children: [
                                                           TextSpan(
-                                                            text: '@${replyingToUser.name}',
-                                                            style: const TextStyle(
-                                                              color: Pallete.blueColor,
+                                                            text:
+                                                                '@${replyingToUser.name}',
+                                                            style:
+                                                                const TextStyle(
+                                                              color: Pallete
+                                                                  .blueColor,
                                                               fontSize: 15,
                                                             ),
                                                           ),
                                                         ],
                                                       ),
                                                     ),
-                                                    loading: () => const SizedBox(),
-                                                    error: (e, st) => const SizedBox(),
+                                                    loading: () =>
+                                                        const SizedBox(),
+                                                    error: (e, st) =>
+                                                        const SizedBox(),
                                                   );
                                                 },
-                                                error: (error, st) => const SizedBox(),
+                                                error: (error, st) =>
+                                                    const SizedBox(),
                                                 loading: () => const SizedBox(),
                                               ),
                                         ),
-                                      
                                       HashtagText(text: widget.tweet.text),
-                                      
-                                      if (widget.tweet.tweetType == TweetType.image) ...[
-                                        const SizedBox(height: 12),
-                                        ClipRRect(
-                                          borderRadius: BorderRadius.circular(16),
-                                          child: CarouselImage(imageLinks: widget.tweet.imageLinks),
-                                        ),
-                                      ],
                                       
                                       if (widget.tweet.link.isNotEmpty) ...[
                                         const SizedBox(height: 12),
                                         ClipRRect(
-                                          borderRadius: BorderRadius.circular(16),
+                                          borderRadius:
+                                              BorderRadius.circular(16),
                                           child: Container(
                                             decoration: BoxDecoration(
                                               border: Border.all(
-                                                color: Pallete.getBorderColor(isDarkMode),
+                                                color: Pallete.getBorderColor(
+                                                    isDarkMode),
                                                 width: 1,
                                               ),
-                                              borderRadius: BorderRadius.circular(16),
+                                              borderRadius:
+                                                  BorderRadius.circular(16),
                                             ),
                                             child: AnyLinkPreview(
-                                              displayDirection: UIDirection.uiDirectionHorizontal,
-                                              link: widget.tweet.link.startsWith('http')
+                                              displayDirection: UIDirection
+                                                  .uiDirectionHorizontal,
+                                              link: widget.tweet.link
+                                                      .startsWith('http')
                                                   ? widget.tweet.link
                                                   : 'https://${widget.tweet.link}',
                                               errorWidget: Container(
-                                                padding: const EdgeInsets.all(16),
+                                                padding:
+                                                    const EdgeInsets.all(16),
                                                 child: Text(
                                                   'Failed to load preview',
-                                                  style: TextStyle(color: Pallete.getSecondaryTextColor(isDarkMode)),
+                                                  style: TextStyle(
+                                                      color: Pallete
+                                                          .getSecondaryTextColor(
+                                                              isDarkMode)),
                                                 ),
                                               ),
                                               placeholderWidget: Container(
-                                                padding: const EdgeInsets.all(16),
-                                                child: const CircularProgressIndicator(strokeWidth: 2),
+                                                padding:
+                                                    const EdgeInsets.all(16),
+                                                child:
+                                                    const CircularProgressIndicator(
+                                                        strokeWidth: 2),
                                               ),
                                             ),
                                           ),
                                         ),
                                       ],
-                                      
                                       const SizedBox(height: 12),
                                     ],
                                   ),
@@ -292,79 +397,60 @@ class _TweetCardState extends ConsumerState<TweetCard> {
                               ],
                             ),
                           ),
-
                           if (widget.showActionsDivider)
                             const Divider(
                               height: 24,
                               thickness: 0.5,
-                              color: Colors.grey,
+                              color: Colors.grey, // Consider Pallete.getBorderColor(isDarkMode)
                             ),
-                          
-                          if (isBotTweet)
-                            Padding(
-                              padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 4.0),
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.end, // Aligns the Column's content to the end
-                                children: [
-                                  Row(
-                                    mainAxisAlignment: MainAxisAlignment.end, // Aligns the stars within the Row to the end
-                                    children: List.generate(5, (index) {
-                                      final starNumber = index + 1;
-                                      final isStarFilled = starNumber <= currentRating;
-                                      
-                                      return GestureDetector(
-                                        onTap: () {
-                                          setState(() {
-                                            currentRating = starNumber;
-                                          });
-                                        },
-                                        child: Padding(
-                                          padding: const EdgeInsets.only(right: 8.0),
-                                          child: Icon(
-                                            Icons.star_rounded,
-                                            color: isStarFilled 
-                                                ? Pallete.yellowColor 
-                                                : Pallete.getSecondaryTextColor(isDarkMode),
-                                            size: 20,
-                                          ),
-                                        ),
-                                      );
-                                    }),
-                                  ),
-                                  if (currentRating > 0)
-                                    Padding(
-                                      padding: const EdgeInsets.only(top: 4.0),
-                                      child: Text(
-                                        'Rated $currentRating star${currentRating == 1 ? '' : 's'}',
-                                        style: TextStyle(
-                                          color: Pallete.getSecondaryTextColor(isDarkMode),
-                                          fontSize: 13,
-                                        ),
+
+                          if (isCurrentTweetByBot)
+                            widget.tweet.repliedTo.isNotEmpty
+                                ? ref.watch(getTweetByIdProvider(widget.tweet.repliedTo)).when(
+                                      data: (originalTweet) {
+                                        // originalTweet is the tweet the bot replied to.
+                                        // The author of originalTweet is originalTweet.uid.
+                                        // currentUser is the user viewing the card.
+                                        final bool canCurrentUserRate = currentUser.uid == originalTweet.uid;
+                                        return buildStarRatingSystem(interactionAllowed: canCurrentUserRate);
+                                      },
+                                      loading: () => const Padding(
+                                        padding: EdgeInsets.symmetric(vertical: 10.0, horizontal: 16.0),
+                                        child: Center(child: CircularProgressIndicator(strokeWidth: 2)),
                                       ),
-                                    ),
-                                ],
-                              ),
-                            )
+                                      error: (e, st) => buildStarRatingSystem(interactionAllowed: false), // Non-interactive on error
+                                    )
+                                : buildStarRatingSystem(interactionAllowed: false) // Bot tweet, but not a reply, so non-interactive rating
                           else
-                            Padding(
-                              padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 4.0),
+                            Padding( // Regular user tweet actions
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 16.0, vertical: 4.0),
                               child: Row(
-                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
                                 children: [
                                   _buildActionButton(
                                     icon: Icons.chat_bubble_outline,
                                     count: widget.tweet.commentIds.length,
-                                    color: Pallete.getSecondaryTextColor(isDarkMode),
+                                    color: Pallete.getSecondaryTextColor(
+                                        isDarkMode),
                                     onTap: () {
-                                       Navigator.push(context, TwitterReplyScreen.route(widget.tweet));
+                                      Navigator.push(
+                                          context,
+                                          TwitterReplyScreen.route(
+                                              widget.tweet));
                                     },
                                   ),
                                   _buildActionButton(
                                     icon: Icons.repeat,
                                     count: widget.tweet.reshareCount,
-                                    color: Pallete.getSecondaryTextColor(isDarkMode),
+                                    color: Pallete.getSecondaryTextColor(
+                                        isDarkMode),
                                     onTap: () {
-                                      ref.read(tweetControllerProvider.notifier).reshareTweet(
+                                      ref
+                                          .read(
+                                              tweetControllerProvider.notifier)
+                                          .reshareTweet(
                                             widget.tweet,
                                             currentUser,
                                             context,
@@ -374,14 +460,23 @@ class _TweetCardState extends ConsumerState<TweetCard> {
                                   LikeButton(
                                     size: 18,
                                     onTap: (isLiked) async {
-                                      ref.read(tweetControllerProvider.notifier).likeTweet(widget.tweet, currentUser);
+                                      ref
+                                          .read(
+                                              tweetControllerProvider.notifier)
+                                          .likeTweet(widget.tweet, currentUser);
                                       return !isLiked;
                                     },
-                                    isLiked: widget.tweet.likes.contains(currentUser.uid),
+                                    isLiked: widget.tweet.likes
+                                        .contains(currentUser.uid),
                                     likeBuilder: (isLiked) {
                                       return Icon(
-                                        isLiked ? Icons.favorite : Icons.favorite_border,
-                                        color: isLiked ? Pallete.redColor : Pallete.getSecondaryTextColor(isDarkMode),
+                                        isLiked
+                                            ? Icons.favorite
+                                            : Icons.favorite_border,
+                                        color: isLiked
+                                            ? Pallete.redColor
+                                            : Pallete.getSecondaryTextColor(
+                                                isDarkMode),
                                         size: 18,
                                       );
                                     },
@@ -392,7 +487,10 @@ class _TweetCardState extends ConsumerState<TweetCard> {
                                         child: Text(
                                           text,
                                           style: TextStyle(
-                                            color: isLiked ? Pallete.redColor : Pallete.getSecondaryTextColor(isDarkMode),
+                                            color: isLiked
+                                                ? Pallete.redColor
+                                                : Pallete.getSecondaryTextColor(
+                                                    isDarkMode),
                                           ),
                                         ),
                                       );
@@ -400,8 +498,9 @@ class _TweetCardState extends ConsumerState<TweetCard> {
                                   ),
                                   _buildActionButton(
                                     icon: Icons.share_outlined,
-                                    count: 0,
-                                    color: Pallete.getSecondaryTextColor(isDarkMode),
+                                    count: 0, // Share count not typically shown directly
+                                    color: Pallete.getSecondaryTextColor(
+                                        isDarkMode),
                                     onTap: () {
                                       // Implement share functionality
                                     },
@@ -410,9 +509,10 @@ class _TweetCardState extends ConsumerState<TweetCard> {
                                   _buildActionButton(
                                     icon: Icons.bar_chart_outlined,
                                     count: (widget.tweet.commentIds.length +
-                                            widget.tweet.reshareCount +
-                                            widget.tweet.likes.length),
-                                    color: Pallete.getSecondaryTextColor(isDarkMode),
+                                        widget.tweet.reshareCount +
+                                        widget.tweet.likes.length),
+                                    color: Pallete.getSecondaryTextColor(
+                                        isDarkMode),
                                     onTap: () {},
                                   ),
                                 ],
@@ -467,4 +567,3 @@ class _TweetCardState extends ConsumerState<TweetCard> {
     );
   }
 }
-// In the user info section of the TweetCard, add the health badge:

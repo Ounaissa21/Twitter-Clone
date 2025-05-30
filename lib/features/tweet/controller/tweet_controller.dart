@@ -1,4 +1,3 @@
-
 import 'dart:io' as io;
 import 'package:appwrite/appwrite.dart';
 import 'package:flutter/cupertino.dart';
@@ -81,7 +80,8 @@ final botUserProvider = FutureProvider<UserModel>((ref) async {
         '683222f400388f832b44', // <<< IMPORTANT: REPLACE THIS WITH YOUR BOT'S ACTUAL UID FROM APPWRITE
     bio: 'I provide helpful messages about healthy tweets.',
     isTwitterBlue: true, followers: [],
-    following: [], // Optionally, make the bot appear verified
+    following: [],
+    healthPoints: 0, // Optionally, make the bot appear verified
   );
 });
 
@@ -149,7 +149,8 @@ class TweetController extends StateNotifier<bool> {
     final res = await _tweetAPI.updateReshareCount(tweet);
     res.fold(
       (l) {
-        if (context.mounted) { // Add this check
+        if (context.mounted) {
+          // Add this check
           showSnackBar(context, l.message);
         }
       },
@@ -162,7 +163,8 @@ class TweetController extends StateNotifier<bool> {
         final res2 = await _tweetAPI.shareTweet(tweet);
         res2.fold(
           (l) {
-            if (context.mounted) { // Add this check
+            if (context.mounted) {
+              // Add this check
               showSnackBar(context, l.message);
             }
           },
@@ -173,7 +175,8 @@ class TweetController extends StateNotifier<bool> {
               notificationType: NotificationType.retweet,
               uid: tweet.uid,
             );
-            if (context.mounted) { // Add this check
+            if (context.mounted) {
+              // Add this check
               showSnackBar(context, 'Retweeted!');
             }
           },
@@ -194,79 +197,51 @@ class TweetController extends StateNotifier<bool> {
     return document.map((tweet) => Tweet.fromMap(tweet.data)).toList();
   }
 
-  // Main method to share a tweet (handles both text and image tweets)
   void shareTweet({
     required List<io.File> images,
     required String text,
     required BuildContext context,
     required String repliedTo,
     required String repliedToUserId,
-  }) {
+  }) async {
     if (text.isEmpty) {
-      if (context.mounted) { // Add this check
-        showSnackBar(context, 'Please enter text');
+      if (context.mounted) {
+        showSnackBar(context, 'Please enter text or select an image.');
       }
       return;
     }
 
-    if (images.isNotEmpty) {
-      _shareImageTweet(
-        images: images,
-        text: text,
-        context: context,
-        repliedTo: repliedTo,
-        repliedToUserId: repliedToUserId,
-      );
-    } else {
-      _shareTextTweet(
-        text: text,
-        context: context,
-        repliedTo: repliedTo,
-        repliedToUserId: repliedToUserId,
-      );
-    }
-  }
-
-  // Helper method to share an image tweet
-  void _shareImageTweet({
-    required List<io.File> images,
-    required String text,
-    required BuildContext context,
-    required String repliedTo,
-    required String repliedToUserId,
-  }) async {
     state = true;
     final hashtags = _getHashtagsFromText(text);
     String link = _getLinkFromText(text);
     final user = _ref.read(currentUserDetailsProvider).value!;
-    final imageLinks = await _storageAPI.uploadImage(images);
+
+    List<String> imageLinks = [];
+    if (images.isNotEmpty) {
+      imageLinks = await _storageAPI.uploadImage(images);
+    }
 
     String category = '';
     String persuasiveMessage = '';
 
     try {
-      // 1. Classify the tweet text using your FastAPI model
       final response = await http.post(
-        Uri.parse(
-            'http://192.168.137.1:8000/classify_post'), // Your FastAPI endpoint
-        headers: {'Content-Type': 'application/json'},
+        Uri.parse('http://ur_ip_address:8000/classify_post'), // Your FastAPI endpoint
+        headers: {'Content-Type': 'application/json; charset=UTF-8'},
         body: jsonEncode({'text': text}),
       );
 
       if (response.statusCode == 200) {
-        final Map<String, dynamic> data = jsonDecode(response.body);
+        final Map<String, dynamic> data = jsonDecode(utf8.decode(response.bodyBytes));
         category = data['category'];
-        // Only get persuasive message if the category is 'Unhealthy'
         if (category.toLowerCase() == 'unhealthy') {
           persuasiveMessage = data['persuasive_message'];
         } else {
           persuasiveMessage = "No message generated (classified as healthy).";
         }
-        print(
-            'Classification Result: Category: $category, Message: $persuasiveMessage'); // Debug print
+        print('Classification Result: Category: $category, Message: $persuasiveMessage');
       } else {
-        print(
-            'Failed to classify tweet: ${response.statusCode} ${response.body}');
+        print('Failed to classify tweet: ${response.statusCode} ${response.body}');
         category = 'Unknown';
         persuasiveMessage = 'Classification failed.';
       }
@@ -276,150 +251,18 @@ class TweetController extends StateNotifier<bool> {
       persuasiveMessage = 'Error during classification.';
     }
 
-    // Create the tweet model
-    Tweet tweet = Tweet(
-      text: text,
-      hashtags: hashtags,
-      link: link,
-      imageLinks: imageLinks,
-      uid: user.uid,
-      tweetType: TweetType.image,
-      tweetedAt: DateTime.now(),
-      likes: const [],
-      commentIds: const [],
-      id: '',
-      reshareCount: 0,
-      retweetedBy: '',
-      repliedTo: repliedTo,
-      category: category, // Use the classified category
-      persuasiveMessage: persuasiveMessage, // Use the generated message
-    );
-
-    // Share the tweet to Appwrite
-    final res = await _tweetAPI.shareTweet(tweet);
-
-    res.fold((l) {
-      if (context.mounted) { // Add this check
-        showSnackBar(context, l.message);
-      }
-    }, (r) async {
-      // If it's a reply, create a notification for the replied-to user
-      if (repliedToUserId.isNotEmpty) {
-        _notificationController.createNotification(
-          text: '${user.name} replied to your tweet!',
-          postId: r.$id,
-          notificationType: NotificationType.reply,
-          uid: repliedToUserId,
-        );
-      }
-
-      // AUTO-REPLY LOGIC: If the tweet is unhealthy and has a persuasive message
-      if (category.toLowerCase() == 'unhealthy' &&
-          persuasiveMessage.isNotEmpty) {
-        // Fetch the bot user details
-        final botUser = await _ref.read(botUserProvider.future);
-
-        // Create a new tweet object for the bot's reply
-        final botReplyTweet = Tweet(
-          text: persuasiveMessage,
-          hashtags: const [],
-          link: '',
-          imageLinks: const [],
-          uid: botUser.uid, // Bot's UID
-          tweetType: TweetType.text, // Bot's reply is text
-          tweetedAt: DateTime.now(),
-          likes: const [],
-          commentIds: const [],
-          id: '',
-          reshareCount: 0,
-          retweetedBy: '',
-          repliedTo: r.$id, // Original tweet's ID
-          category: 'healthy', // Bot's reply is considered healthy
-          persuasiveMessage:
-              '', // Bot's reply doesn't need a persuasive message
-        );
-
-        // Share the bot's reply tweet
-        final botRes = await _tweetAPI.shareTweet(botReplyTweet);
-
-        botRes.fold(
-          (l) => print(
-              'Failed to send bot reply: ${l.message}'), // Log bot reply error
-          (botReplyDocument) {
-            print('Bot successfully replied to tweet ${r.$id}');
-            // Optionally, create a notification for the original tweet author about the bot's reply
-            _notificationController.createNotification(
-              text: '${botUser.name} replied to your tweet!',
-              postId: r.$id, // The original tweet's ID
-              notificationType: NotificationType.reply,
-              uid: user.uid, // Notify the original tweet author
-            );
-          },
-        );
-      }
-    });
-    state = false;
-  }
-
-  void _shareTextTweet({
-    required String text,
-    required BuildContext context,
-    required String repliedTo,
-    required String repliedToUserId,
-  }) async {
-    state = true;
-    final hashtags = _getHashtagsFromText(text);
-    String link = _getLinkFromText(text);
-    final user = _ref.read(currentUserDetailsProvider).value!;
-
-    String category = '';
-    String persuasiveMessage = '';
-
-   try {
-      // 1. Classify the tweet text using your FastAPI model
-      final response = await http.post(
-        Uri.parse(
-            'http://192.168.137.1:8000/classify_post'), // Your FastAPI endpoint
-        headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({'text': text}),
-      );
-
-      if (response.statusCode == 200) {
-        final Map<String, dynamic> data = jsonDecode(response.body);
-        category = data['category'];
-        // Only get persuasive message if the category is 'Unhealthy'
-        if (category.toLowerCase() == 'unhealthy') {
-          persuasiveMessage = data['persuasive_message'];
-        } else {
-          persuasiveMessage = "No message generated (classified as healthy).";
-        }
-        print(
-            'Classification Result: Category: $category, Message: $persuasiveMessage'); // Debug print
-      } else {
-        print(
-            'Failed to classify tweet: ${response.statusCode} ${response.body}');
-        category = 'Unknown';
-        persuasiveMessage = 'Classification failed.';
-      }
-    } catch (e) {
-      print('Error calling classification API: $e');
-      category = 'Unknown';
-      persuasiveMessage = 'Error during classification.';
-    }
-    // Add this block
     if (category.toLowerCase() == 'healthy' || category.toLowerCase() == 'unhealthy') {
       _updateUserHealthPoints(category, user.uid);
     }
-    // End of added blockI/flutter ( 5009): Failed to classify tweet: 500 Internal Server Error
 
-    // Create the tweet model
+    TweetType tweetType = images.isNotEmpty ? TweetType.image : TweetType.text;
+
     Tweet tweet = Tweet(
       text: text,
       hashtags: hashtags,
       link: link,
-      imageLinks: const [],
       uid: user.uid,
-      tweetType: TweetType.text,
+      tweetType: tweetType,
       tweetedAt: DateTime.now(),
       likes: const [],
       commentIds: const [],
@@ -427,20 +270,17 @@ class TweetController extends StateNotifier<bool> {
       reshareCount: 0,
       retweetedBy: '',
       repliedTo: repliedTo,
-      category: category, // Use the classified category
-      persuasiveMessage: persuasiveMessage, // Use the generated message
+      category: category,
+      persuasiveMessage: persuasiveMessage,
     );
-    
 
-    // Share the tweet to Appwrite
     final res = await _tweetAPI.shareTweet(tweet);
 
     res.fold((l) {
-      if (context.mounted) { // Add this check
+      if (context.mounted) {
         showSnackBar(context, l.message);
       }
     }, (r) async {
-      // If it's a reply, create a notification for the replied-to user
       if (repliedToUserId.isNotEmpty) {
         _notificationController.createNotification(
           text: '${user.name} replied to your tweet!',
@@ -450,46 +290,37 @@ class TweetController extends StateNotifier<bool> {
         );
       }
 
-      // AUTO-REPLY LOGIC: If the tweet is unhealthy and has a persuasive message
-      if (category.toLowerCase() == 'unhealthy' &&
-          persuasiveMessage.isNotEmpty) {
-        // Fetch the bot user details
+      if (category.toLowerCase() == 'unhealthy' && persuasiveMessage.isNotEmpty) {
         final botUser = await _ref.read(botUserProvider.future);
 
-        // Create a new tweet object for the bot's reply
         final botReplyTweet = Tweet(
           text: persuasiveMessage,
           hashtags: const [],
           link: '',
-          imageLinks: const [],
-          uid: botUser.uid, // Bot's UID
-          tweetType: TweetType.text, // Bot's reply is text
+          uid: botUser.uid,
+          tweetType: TweetType.text,
           tweetedAt: DateTime.now(),
           likes: const [],
           commentIds: const [],
           id: '',
           reshareCount: 0,
           retweetedBy: '',
-          repliedTo: r.$id, // Original tweet's ID
-          category: 'healthy', // Bot's reply is considered healthy
-          persuasiveMessage:
-              '', // Bot's reply doesn't need a persuasive message
+          repliedTo: r.$id,
+          category: 'healthy',
+          persuasiveMessage: '',
         );
 
-        // Share the bot's reply tweet
         final botRes = await _tweetAPI.shareTweet(botReplyTweet);
 
         botRes.fold(
-          (l) => print(
-              'Failed to send bot reply: ${l.message}'), // Log bot reply error
+          (l) => print('Failed to send bot reply: ${l.message}'),
           (botReplyDocument) {
             print('Bot successfully replied to tweet ${r.$id}');
-            // Optionally, create a notification for the original tweet author about the bot's reply
             _notificationController.createNotification(
               text: '${botUser.name} replied to your tweet!',
-              postId: r.$id, // The original tweet's ID
+              postId: r.$id,
               notificationType: NotificationType.reply,
-              uid: user.uid, // Notify the original tweet author
+              uid: user.uid,
             );
           },
         );
@@ -524,16 +355,16 @@ class TweetController extends StateNotifier<bool> {
     return hashtags;
   }
 
-
-
   // Update the shareTweet methods to handle health points
   void _updateUserHealthPoints(String category, String uid) async {
-    final userAPI = _ref.read(userAPIProvider); // Assuming userAPIProvider is defined and provides a UserAPI
+    final userAPI = _ref.read(
+        userAPIProvider); // Assuming userAPIProvider is defined and provides a UserAPI
     final userData = await userAPI.getUserData(uid);
     final user = UserModel.fromMap(userData.data);
 
     // Update health points based on tweet category
-    final newPoints = user.healthPoints + (category.toLowerCase() == 'healthy' ? 1 : -1);
+    final newPoints =
+        user.healthPoints + (category.toLowerCase() == 'healthy' ? 1 : -1);
 
     // Ensure points don't go below 0
     final updatedPoints = newPoints < 0 ? 0 : newPoints;
@@ -541,5 +372,4 @@ class TweetController extends StateNotifier<bool> {
     final updatedUser = user.copyWith(healthPoints: updatedPoints);
     await userAPI.updateUserData(updatedUser);
   }
-  
 }
