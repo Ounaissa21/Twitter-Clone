@@ -174,7 +174,7 @@ class _TweetCardState extends ConsumerState<TweetCard> {
                                           if (!isBotTweet && !widget.isReplyInThread) ...[
                                             const SizedBox(width: 4),
                                             SvgPicture.asset(
-                                              AssetsConstants.Bronze2,
+                                              user.getBadgeAsset(),
                                               height: 18,
                                               width: 18,
                                             ),

@@ -41,6 +41,45 @@ class _UserProfileState extends ConsumerState<UserProfile>
     super.dispose();
   }
 
+  // Helper method to get badge name from health points
+  String _getBadgeName(int healthPoints) {
+    if (healthPoints >= 50) return 'Platinum';
+    if (healthPoints >= 25) return 'Gold';
+    if (healthPoints >= 15) return 'Silver';
+    if (healthPoints >= 5) return 'Bronze';
+    return 'Iron';
+  }
+
+  // Helper method to get next level requirements
+  Map<String, dynamic> _getNextLevelInfo(int healthPoints) {
+    if (healthPoints < 5) {
+      return {'nextLevel': 'Bronze', 'pointsNeeded': 5 - healthPoints, 'totalNeeded': 5};
+    } else if (healthPoints < 15) {
+      return {'nextLevel': 'Silver', 'pointsNeeded': 15 - healthPoints, 'totalNeeded': 15};
+    } else if (healthPoints < 25) {
+      return {'nextLevel': 'Gold', 'pointsNeeded': 25 - healthPoints, 'totalNeeded': 25};
+    } else if (healthPoints < 50) {
+      return {'nextLevel': 'Platinum', 'pointsNeeded': 50 - healthPoints, 'totalNeeded': 50};
+    } else {
+      return {'nextLevel': 'Max Level', 'pointsNeeded': 0, 'totalNeeded': 50};
+    }
+  }
+
+  // Helper method to calculate progress percentage
+  double _getProgressPercentage(int healthPoints) {
+    if (healthPoints < 5) {
+      return healthPoints / 5;
+    } else if (healthPoints < 15) {
+      return (healthPoints - 5) / 10;
+    } else if (healthPoints < 25) {
+      return (healthPoints - 15) / 10;
+    } else if (healthPoints < 50) {
+      return (healthPoints - 25) / 25;
+    } else {
+      return 1.0;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final currentUser = ref.watch(currentUserDetailsProvider).value;
@@ -76,7 +115,7 @@ class _UserProfileState extends ConsumerState<UserProfile>
                         ),
                       ),
                       Text(
-                        '${widget.user.followers.length} Tweets', // You might want to get actual tweet count
+                        '${widget.user.followers.length} Tweets',
                         style: const TextStyle(
                           color: Colors.grey,
                           fontSize: 14,
@@ -203,7 +242,7 @@ class _UserProfileState extends ConsumerState<UserProfile>
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            // Name and Verification
+                            // Name and Verification with Health Badge
                             Row(
                               children: [
                                 Text(
@@ -221,10 +260,49 @@ class _UserProfileState extends ConsumerState<UserProfile>
                                     height: 20,
                                   ),
                                 ],
+                                const SizedBox(width: 8),
+                                // Health Badge
+                                Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                  decoration: BoxDecoration(
+                                    color: Colors.grey[800],
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                  child: Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      SvgPicture.asset(
+                                        widget.user.getBadgeAsset(),
+                                        height: 16,
+                                        width: 16,
+                                      ),
+                                      const SizedBox(width: 4),
+                                      Text(
+                                        _getBadgeName(widget.user.healthPoints),
+                                        style: const TextStyle(
+                                          color: Colors.white,
+                                          fontSize: 12,
+                                          fontWeight: FontWeight.w500,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
                               ],
                             ),
                             
+                            // Health Points Summary
+                            const SizedBox(height: 8),
+                            Text(
+                              '${widget.user.healthPoints} points • ${widget.user.healthPoints} healthy tweets',
+                              style: const TextStyle(
+                                fontSize: 14,
+                                color: Colors.grey,
+                              ),
+                            ),
+                            
                             // Username
+                            const SizedBox(height: 4),
                             Text(
                               '@${widget.user.name}',
                               style: const TextStyle(
@@ -261,6 +339,132 @@ class _UserProfileState extends ConsumerState<UserProfile>
                                   text: ' Followers',
                                 ),
                               ],
+                            ),
+                            
+                            // Badge Progress Section
+                            const SizedBox(height: 24),
+                            Container(
+                              padding: const EdgeInsets.all(16),
+                              decoration: BoxDecoration(
+                                color: Colors.grey[900],
+                                borderRadius: BorderRadius.circular(12),
+                                border: Border.all(color: Colors.grey[800]!),
+                              ),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  const Text(
+                                    'Badge Progress',
+                                    style: TextStyle(
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.white,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 16),
+                                  
+                                  // Current Badge Info
+                                  Row(
+                                    children: [
+                                      SvgPicture.asset(
+                                        widget.user.getBadgeAsset(),
+                                        height: 32,
+                                        width: 32,
+                                      ),
+                                      const SizedBox(width: 12),
+                                      Expanded(
+                                        child: Column(
+                                          crossAxisAlignment: CrossAxisAlignment.start,
+                                          children: [
+                                            Text(
+                                              '${_getBadgeName(widget.user.healthPoints)} Badge',
+                                              style: const TextStyle(
+                                                fontSize: 16,
+                                                fontWeight: FontWeight.w600,
+                                                color: Colors.white,
+                                              ),
+                                            ),
+                                            Text(
+                                              '${widget.user.healthPoints} healthy tweets',
+                                              style: const TextStyle(
+                                                fontSize: 14,
+                                                color: Colors.grey,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                      Text(
+                                        '${widget.user.healthPoints} pts',
+                                        style: const TextStyle(
+                                          fontSize: 18,
+                                          fontWeight: FontWeight.bold,
+                                          color: Colors.white,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                  
+                                  const SizedBox(height: 16),
+                                  
+                                  // Progress Bar
+                                  Column(
+                                    children: [
+                                      Row(
+                                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                        children: [
+                                          Text(
+                                            '${widget.user.healthPoints} points',
+                                            style: const TextStyle(
+                                              fontSize: 12,
+                                              color: Colors.grey,
+                                            ),
+                                          ),
+                                          Builder(
+                                            builder: (context) {
+                                              final nextLevelInfo = _getNextLevelInfo(widget.user.healthPoints);
+                                              if (nextLevelInfo['pointsNeeded'] == 0) {
+                                                return const Text(
+                                                  'Max level reached!',
+                                                  style: TextStyle(
+                                                    fontSize: 12,
+                                                    color: Colors.green,
+                                                    fontWeight: FontWeight.w500,
+                                                  ),
+                                                );
+                                              }
+                                              return Text(
+                                                '${nextLevelInfo['pointsNeeded']} needed for ${nextLevelInfo['nextLevel']}',
+                                                style: const TextStyle(
+                                                  fontSize: 12,
+                                                  color: Colors.grey,
+                                                ),
+                                              );
+                                            },
+                                          ),
+                                        ],
+                                      ),
+                                      const SizedBox(height: 8),
+                                      LinearProgressIndicator(
+                                        value: _getProgressPercentage(widget.user.healthPoints),
+                                        backgroundColor: Colors.grey[700],
+                                        valueColor: AlwaysStoppedAnimation<Color>(
+                                          widget.user.healthPoints >= 50 
+                                              ? Colors.purple 
+                                              : widget.user.healthPoints >= 25 
+                                                  ? Colors.amber 
+                                                  : widget.user.healthPoints >= 15 
+                                                      ? Colors.grey 
+                                                      : widget.user.healthPoints >= 5 
+                                                          ? Colors.orange 
+                                                          : Colors.brown,
+                                        ),
+                                        minHeight: 6,
+                                      ),
+                                    ],
+                                  ),
+                                ],
+                              ),
                             ),
                           ],
                         ),

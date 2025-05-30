@@ -4,6 +4,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:twitter_clone/apis/storage_api.dart';
 import 'package:twitter_clone/apis/tweet_api.dart';
+import 'package:twitter_clone/apis/user_api.dart';
 import 'package:twitter_clone/core/enums/notification_type_enum.dart';
 import 'package:twitter_clone/core/enums/tweet_type_enum.dart';
 import 'package:twitter_clone/core/utils.dart';
@@ -359,7 +360,6 @@ class TweetController extends StateNotifier<bool> {
     state = false;
   }
 
-  // Helper method to share a text-only tweet
   void _shareTextTweet({
     required String text,
     required BuildContext context,
@@ -374,7 +374,7 @@ class TweetController extends StateNotifier<bool> {
     String category = '';
     String persuasiveMessage = '';
 
-    try {
+   try {
       // 1. Classify the tweet text using your FastAPI model
       final response = await http.post(
         Uri.parse(
@@ -384,7 +384,7 @@ class TweetController extends StateNotifier<bool> {
       );
 
       if (response.statusCode == 200) {
-        final data = jsonDecode(utf8.decode(response.bodyBytes));
+        final Map<String, dynamic> data = jsonDecode(response.body);
         category = data['category'];
         // Only get persuasive message if the category is 'Unhealthy'
         if (category.toLowerCase() == 'unhealthy') {
@@ -405,6 +405,11 @@ class TweetController extends StateNotifier<bool> {
       category = 'Unknown';
       persuasiveMessage = 'Error during classification.';
     }
+    // Add this block
+    if (category.toLowerCase() == 'healthy' || category.toLowerCase() == 'unhealthy') {
+      _updateUserHealthPoints(category, user.uid);
+    }
+    // End of added blockI/flutter ( 5009): Failed to classify tweet: 500 Internal Server Error
 
     // Create the tweet model
     Tweet tweet = Tweet(
@@ -424,6 +429,7 @@ class TweetController extends StateNotifier<bool> {
       category: category, // Use the classified category
       persuasiveMessage: persuasiveMessage, // Use the generated message
     );
+    
 
     // Share the tweet to Appwrite
     final res = await _tweetAPI.shareTweet(tweet);
@@ -516,4 +522,23 @@ class TweetController extends StateNotifier<bool> {
     }
     return hashtags;
   }
+
+
+
+  // Update the shareTweet methods to handle health points
+  void _updateUserHealthPoints(String category, String uid) async {
+    final userAPI = _ref.read(userAPIProvider); // Assuming userAPIProvider is defined and provides a UserAPI
+    final userData = await userAPI.getUserData(uid);
+    final user = UserModel.fromMap(userData.data);
+
+    // Update health points based on tweet category
+    final newPoints = user.healthPoints + (category.toLowerCase() == 'healthy' ? 1 : -1);
+
+    // Ensure points don't go below 0
+    final updatedPoints = newPoints < 0 ? 0 : newPoints;
+
+    final updatedUser = user.copyWith(healthPoints: updatedPoints);
+    await userAPI.updateUserData(updatedUser);
+  }
+  
 }
