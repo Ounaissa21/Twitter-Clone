@@ -14,7 +14,6 @@ class UserModel {
   final String uid;
   final String bio;
   final bool isTwitterBlue;
-  final int healthPoints;
   const UserModel({
     required this.email,
     required this.name,
@@ -66,7 +65,7 @@ class UserModel {
     result.addAll({'bio': bio});
     result.addAll({'isTwitterBlue': isTwitterBlue});
     result.addAll({'healthPoints': healthPoints});
-
+  
     return result;
   }
 
@@ -103,28 +102,27 @@ class UserModel {
     if (identical(this, other)) return true;
 
     return other is UserModel &&
-        other.email == email &&
-        other.name == name &&
-        listEquals(other.followers, followers) &&
-        listEquals(other.following, following) &&
-        other.profilePic == profilePic &&
-        other.bannerPic == bannerPic &&
-        other.uid == uid &&
-        other.bio == bio &&
-        other.isTwitterBlue == isTwitterBlue;
+      other.email == email &&
+      other.name == name &&
+      listEquals(other.followers, followers) &&
+      listEquals(other.following, following) &&
+      other.profilePic == profilePic &&
+      other.bannerPic == bannerPic &&
+      other.uid == uid &&
+      other.bio == bio &&
+      other.isTwitterBlue == isTwitterBlue;
   }
 
   @override
   int get hashCode {
     return email.hashCode ^
-        name.hashCode ^
-        followers.hashCode ^
-        following.hashCode ^
-        profilePic.hashCode ^
-        bannerPic.hashCode ^
-        uid.hashCode ^
-        bio.hashCode ^
-        isTwitterBlue.hashCode;
-    healthPoints.hashCode;
+      name.hashCode ^
+      followers.hashCode ^
+      following.hashCode ^
+      profilePic.hashCode ^
+      bannerPic.hashCode ^
+      uid.hashCode ^
+      bio.hashCode ^
+      isTwitterBlue.hashCode;
   }
 }

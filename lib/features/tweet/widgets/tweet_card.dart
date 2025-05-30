@@ -155,10 +155,10 @@ class _TweetCardState extends ConsumerState<TweetCard> {
                                         children: [
                                           Flexible(
                                             child: Text(
-                                              user.name,
-                                              style: TextStyle(
-                                                color: Theme.of(context).textTheme.bodyLarge?.color,
-                                                fontWeight: FontWeight.w700,
+      user.name,
+      style: TextStyle(
+        color: Theme.of(context).textTheme.bodyLarge?.color,
+        fontWeight: FontWeight.bold,
                                                 fontSize: 15,
                                               ),
                                               overflow: TextOverflow.ellipsis,
@@ -166,10 +166,11 @@ class _TweetCardState extends ConsumerState<TweetCard> {
                                           ),
                                           if (user.isTwitterBlue) ...[
                                             const SizedBox(width: 4),
-                                            SvgPicture.asset(
-                                              AssetsConstants.verifiedIcon,
-                                              height: 16,
-                                            ),
+    if (user.isTwitterBlue)
+      SvgPicture.asset(
+        AssetsConstants.verifiedIcon,
+        height: 16,
+      ),
                                           ],
                                           if (!isBotTweet && !widget.isReplyInThread) ...[
                                             const SizedBox(width: 4),
@@ -466,3 +467,4 @@ class _TweetCardState extends ConsumerState<TweetCard> {
     );
   }
 }
+// In the user info section of the TweetCard, add the health badge:
