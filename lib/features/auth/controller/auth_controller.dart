@@ -18,10 +18,12 @@ final authControllerProvider =
   );
 });
 
-final currentUserDetailsProvider = FutureProvider((ref) {
-  final currentUserId = ref.watch(currentUserAccountProvider).value!.$id;
-  final userDetails = ref.watch(userDetailsProvider(currentUserId));
-  return userDetails.value;
+final currentUserDetailsProvider = FutureProvider((ref) async {
+  final currentUserAccountAsync = ref.watch(currentUserAccountProvider);
+  final user = currentUserAccountAsync.value;
+  if (user == null) return null;
+  final userDetails = await ref.watch(userDetailsProvider(user.$id).future);
+  return userDetails;
 });
 
 final userDetailsProvider = FutureProvider.family((ref, String uid) {
@@ -103,10 +105,10 @@ class AuthController extends StateNotifier<bool> {
     final res = await _authAPI.logout();
     res.fold((l) => null, (r) {
       Navigator.pushAndRemoveUntil(
-       context,
-       MaterialPageRoute(builder: (context) => SignupView()),
-      (route) => false,
-    );
+        context,
+        MaterialPageRoute(builder: (context) => SignupView()),
+        (route) => false,
+      );
     });
   }
 }

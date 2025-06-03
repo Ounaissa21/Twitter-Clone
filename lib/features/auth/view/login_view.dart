@@ -66,24 +66,29 @@ class _LoginViewState extends ConsumerState<LoginView> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           const SizedBox(height: 40),
-                          Row(
+                          Stack(
+                            alignment: Alignment.center,
                             children: [
-                              IconButton(
-                                onPressed: () => Navigator.pop(context),
-                                icon: Icon(
-                                  Icons.close,
-                                  color: Theme.of(context).iconTheme.color,
-                                  size: 24,
+                              // Centered Twitter logo
+                              Center(
+                                child: SvgPicture.asset(
+                                  AssetsConstants.twitterLogo,
+                                  height: 50,
+                                  color: Pallete.blueColor,
                                 ),
                               ),
-                              const Spacer(),
-                              SvgPicture.asset(
-                                AssetsConstants.twitterLogo,
-                                height: 30,
-                                color: Pallete.blueColor, // Ensure Pallete.blueColor is defined
+                              // Close button positioned at the left
+                              Positioned(
+                                left: 0,
+                                child: IconButton(
+                                  onPressed: () => Navigator.pop(context),
+                                  icon: Icon(
+                                    Icons.close,
+                                    color: Theme.of(context).iconTheme.color,
+                                    size: 24,
+                                  ),
+                                ),
                               ),
-                              const Spacer(),
-                              const SizedBox(width: 48), 
                             ],
                           ),
                           const SizedBox(height: 40),

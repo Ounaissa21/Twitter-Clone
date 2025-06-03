@@ -114,13 +114,6 @@ class _UserProfileState extends ConsumerState<UserProfile>
                           fontWeight: FontWeight.bold,
                         ),
                       ),
-                      Text(
-                        '${widget.user.followers.length} Tweets',
-                        style: const TextStyle(
-                          color: Colors.grey,
-                          fontSize: 14,
-                        ),
-                      ),
                     ],
                   ),
                   centerTitle: false,

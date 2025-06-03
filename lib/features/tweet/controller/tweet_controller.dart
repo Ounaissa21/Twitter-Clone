@@ -74,7 +74,7 @@ final botUserProvider = FutureProvider<UserModel>((ref) async {
     email: 'healthadviser@gmail.com',
     name: 'Health advisor',
     profilePic:
-        'https://cdn.discordapp.com/attachments/1228445946900381720/1376418121413431326/healthbotpfp.PNG?ex=683540c4&is=6833ef44&hm=008c8e022687ba02e4b00deb52143fe3ec23fb75f502bb69f5da6a5a0b5348e1&', // Placeholder image for the bot
+        'https://cdn.discordapp.com/attachments/1228445946900381720/1376418121413431326/healthbotpfp.PNG?ex=683e7b44&is=683d29c4&hm=8569b52cf6fb23bdc8b421cc8e0a682bd981ad1938b9350c966eb87b11ca52c3&', // Placeholder image for the bot
     bannerPic: '',
     uid:
         '683222f400388f832b44', // <<< IMPORTANT: REPLACE THIS WITH YOUR BOT'S ACTUAL UID FROM APPWRITE
